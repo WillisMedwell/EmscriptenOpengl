@@ -46,7 +46,6 @@ jobs:
           mv web-release/ /tmp/
           dir /tmp/
 
-      
       - name: Checkout default branch
         uses: actions/checkout@v2
 
@@ -55,9 +54,6 @@ jobs:
           git fetch
           git checkout gh-pages || (git checkout --orphan gh-pages && git rm -rf .)
     
-      - name: Move Benchmark Results Back from Temp Directory
-        run: mv /tmp/web-release/ ./
-
       - name: Commit and Push to gh-pages
         run: |
           git config --local user.email "action@github.com"
