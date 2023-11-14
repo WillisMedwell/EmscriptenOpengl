@@ -27,6 +27,9 @@ jobs:
           mv Graphics.html web-release/
           mv Graphics.js web-release/
           mv Graphics.wasm web-release/
+
+      - name: Configure safe directory for Git
+        run: git config --global --add safe.directory /__w/EmscriptenOpengl/EmscriptenOpengl
           
       - name: Upload Benchmark Results as Artifact
         uses: actions/upload-artifact@v2
