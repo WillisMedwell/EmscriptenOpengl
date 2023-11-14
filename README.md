@@ -9,3 +9,6 @@
     ```
     -DCMAKE_TOOLCHAIN_FILE=C:/apps/vcpkg/vcpkg/scripts/buildsystems/vcpkg.cmake
     ```
+
+## Resources
+https://stackoverflow.com/questions/63062200/cmake-with-emscripten-and-vcpkg-cant-bind-two-toolchain-files

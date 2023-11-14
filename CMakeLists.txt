@@ -9,33 +9,30 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c" "src/*.cxx")
 file(GLOB_RECURSE HEADERS "include/*.hpp" "include/*.h")
 
-#find_package(glm CONFIG REQUIRED)
-#find_package(glaze CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(glaze CONFIG REQUIRED)
 
-# if(NOT DEFINED EMSCRIPTEN)
-#     add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS})
+if(NOT DEFINED EMSCRIPTEN)
+    add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS})
 
-#     find_package(OpenGL REQUIRED)
-#     find_package(GLEW REQUIRED)
-#     find_package(glfw3 CONFIG REQUIRED)
+    find_package(OpenGL REQUIRED)
+    find_package(GLEW REQUIRED)
+    find_package(glfw3 CONFIG REQUIRED)
 
-#     target_include_directories(
-#         ${CMAKE_PROJECT_NAME}
-#         PRIVATE
-#             ${CMAKE_SOURCE_DIR}/include
-#     )
+    target_include_directories(
+        ${CMAKE_PROJECT_NAME}
+        PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+    )
 
-#     target_link_libraries(
-#         ${CMAKE_PROJECT_NAME} 
-#         PRIVATE 
-#             OpenGL::GL
-#             GLEW::GLEW
-#             glfw
-#             glm::glm
-#             glaze::glaze
-#     )
-
-# elseif(DEFINED EMSCRIPTEN)
+    target_link_libraries(
+        ${CMAKE_PROJECT_NAME} 
+        PRIVATE 
+            OpenGL::GL
+            GLEW::GLEW
+            glfw
+    )
+elseif(DEFINED EMSCRIPTEN)
     add_definitions(-DEMSCRIPTEN)
 
     message(STATUS "EMSCRIPTEN BUILD")
@@ -44,7 +41,7 @@ file(GLOB_RECURSE HEADERS "include/*.hpp" "include/*.h")
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_WEBGL2=1 -s USE_GLFW=3")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_RUNTIME_METHODS='[\"callMain\"]' -s DEMANGLE_SUPPORT=1")
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    set(CMAKE_EXECUTABLE_SUFFIX ".js")
 
     target_include_directories(
         ${CMAKE_PROJECT_NAME}
@@ -52,10 +49,10 @@ file(GLOB_RECURSE HEADERS "include/*.hpp" "include/*.h")
             ${CMAKE_SOURCE_DIR}/include}
     )
 
-    # target_link_libraries(
-    #     ${CMAKE_PROJECT_NAME} 
-    #     PRIVATE 
-    #         glm::glm
-    #         glaze::glaze
-    # )
-# endif()
+    target_link_libraries(
+        ${CMAKE_PROJECT_NAME} 
+        PRIVATE 
+            glm::glm
+            glaze::glaze
+    )
+endif()

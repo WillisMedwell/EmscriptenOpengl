@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>My Emscripten Test Project</title>
+</head>
+
+<body>
+    <h1>Emscripten Test</h1>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script>
+        var Module = {
+            canvas: document.getElementById('canvas'),
+            onRuntimeInitialized: function () {
+                Module.callMain(['arg1', 'arg2']);
+            }
+        };
+    </script>
+    <p>Created by Willis Medwell</p>
+    <script src="Graphics.js"></script>
+</body>
+
+</html>

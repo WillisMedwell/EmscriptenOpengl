@@ -11,22 +11,39 @@ jobs:
       - uses: actions/checkout@v1
         with:
           submodules: true
+    
+      - name: Install vcpkg
+        run: |
+          whereis em++
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+          echo "$GITHUB_WORKSPACE/vcpkg" >> $GITHUB_PATH
+      
       - name: Build with CMakeSettings.json targeting WASM
         uses: lukka/run-cmake@v3
         with:
           cmakeListsOrSettingsJson: CMakeSettingsJson
           configurationRegexFilter: 'Emscripten Linux Release'
+          cmakeAppendedArgs: '-DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=wasm32-emscripten -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake'
           cmakeWrapperCommand: emcmake
           buildDirectory: ${{ env.buildDir }}
-
+          
       - name: Print Build Directory Path
         run: | 
+          
           cd build
           cd Emscripten\ Linux\ Release
           mkdir web-release
-          mv Graphics.html web-release/
           mv Graphics.js web-release/
           mv Graphics.wasm web-release/
+          cd ..
+          cd ..
+          mv index.html build/
+          cd build
+          mv index.html Emscripten\ Linux\ Release
+          cd Emscripten\ Linux\ Release
+          mv index.html web-release/
+          
 
       - name: Configure safe directory for Git
         run: git config --global --add safe.directory /__w/EmscriptenOpengl/EmscriptenOpengl
@@ -56,7 +73,7 @@ jobs:
       
       - name: Move Results Back from Temp Directory
         run: | 
-          mv /tmp/web-release/Graphics.html ./
+          mv /tmp/web-release/index.html ./
           mv /tmp/web-release/Graphics.js ./
           mv /tmp/web-release/Graphics.wasm ./
 
@@ -64,7 +81,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add Graphics.html
+          git add index.html
           git add Graphics.js
           git add Graphics.wasm
           git commit -m "Add release" || echo "No changes to commit"
