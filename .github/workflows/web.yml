@@ -29,7 +29,7 @@ jobs:
           mv Graphics.wasm web-release/
 
       - name: Configure safe directory for Git
-        run: git config --global --add safe.directory /__w/EmscriptenOpengl/EmscriptenOpengl
+        run: git config --global --add safe.directory /__w/${{ github.repository }}/${{ github.repository }}
           
       - name: Upload Benchmark Results as Artifact
         uses: actions/upload-artifact@v2
