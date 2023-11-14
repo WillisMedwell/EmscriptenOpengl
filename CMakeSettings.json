@@ -1,0 +1,32 @@
+{
+  "configurations": [
+    {
+      "environments": [
+        {
+          "namespace": "",
+          "CONFIGURATION": "Release"
+        }
+      ],
+      "name": "Emscripten Linux Release",
+      "generator": "Ninja",
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+      "configurationType": "${CONFIGURATION}",
+      "remoteMachineName": "::1",
+      "remoteCMakeListsRoot": "/var/tmp/src/${workspaceHash}/${name}/",
+      "cmakeExecutable": "/usr/bin/cmake",
+      "remoteBuildRoot": "/var/tmp/build/${workspaceHash}/build/${name}/",
+      "remoteInstallRoot": "/var/tmp/build/${workspaceHash}/install/${name}",
+      "remoteCopySources": true,
+      "remoteCopySourcesOutputVerbosity": "Normal",
+      "remoteCopySourcesMethod": "rsync",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [
+        "linux_x64"
+      ],
+      "buildDirectory": "${{ env.buildDir }}"
+    }
+  ]
+}

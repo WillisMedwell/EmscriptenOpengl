@@ -1,0 +1,67 @@
+name: web
+on: [push, pull_request]
+
+jobs:
+  web-build:
+    runs-on: ubuntu-latest
+    container: emscripten/emsdk:latest
+    env:
+      buildDir: '${{ github.workspace }}/build'
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: true
+      - name: Build with CMakeSettings.json targeting WASM
+        uses: lukka/run-cmake@v3
+        with:
+          cmakeListsOrSettingsJson: CMakeSettingsJson
+          configurationRegexFilter: 'Emscripten Linux Release'
+          cmakeWrapperCommand: emcmake
+          buildDirectory: ${{ env.buildDir }}
+
+      - name: Print Build Directory Path
+        run: | 
+          cd build
+          cd Emscripten\ Linux\ Release
+          mkdir web-release
+          mv Graphics.html web-release/
+          mv Graphics.js web-release/
+          mv Graphics.wasm web-release/
+          
+      - name: Upload Benchmark Results as Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: web-release/
+          path: web-release/
+
+      - name: Move Dir to tmp
+        run: |
+          echo "Current dir"
+          cd build
+          cd Emscripten\ Linux\ Release
+          dir
+          mv web-release/ /tmp/
+          dir /tmp/
+
+      
+      - name: Checkout default branch
+        uses: actions/checkout@v2
+
+      - name: Create or Checkout gh-pages branch
+        run: |
+          git fetch
+          git checkout gh-pages || (git checkout --orphan gh-pages && git rm -rf .)
+    
+      - name: Move Benchmark Results Back from Temp Directory
+        run: mv /tmp/web-release/ ./
+
+      - name: Commit and Push to gh-pages
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add web-release
+          git commit -m "Add release" || echo "No changes to commit"
+          git push https://${{secrets.GITHUB_TOKEN}}@github.com/${{github.repository}} gh-pages
+      
+  
+
