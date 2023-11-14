@@ -24,6 +24,8 @@ if(NOT DEFINED EMSCRIPTEN)
         PRIVATE
             ${CMAKE_SOURCE_DIR}/include
     )
+    
+    message(STATUS "${CMAKE_SOURCE_DIR}")
 
     target_link_libraries(
         ${CMAKE_PROJECT_NAME} 
@@ -39,6 +41,11 @@ elseif(DEFINED EMSCRIPTEN)
 
     add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS})
 
+    message(STATUS "${CMAKE_SOURCE_DIR}")
+    message(STATUS "${CMAKE_SOURCE_DIR}")
+
+    message(STATUS "${HEADERS}")
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_WEBGL2=1 -s USE_GLFW=3")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_RUNTIME_METHODS='[\"callMain\"]' -s DEMANGLE_SUPPORT=1")
     set(CMAKE_EXECUTABLE_SUFFIX ".js")
@@ -46,7 +53,7 @@ elseif(DEFINED EMSCRIPTEN)
     target_include_directories(
         ${CMAKE_PROJECT_NAME}
         PRIVATE
-            ${CMAKE_SOURCE_DIR}/include}
+            ${CMAKE_SOURCE_DIR}/include
     )
 
     target_link_libraries(

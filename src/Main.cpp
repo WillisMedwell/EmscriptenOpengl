@@ -4,157 +4,142 @@
  * University of Illinois/NCSA Open Source License.  Both these licenses can be
  * found in the LICENSE file.
  */
+#include "Libraries.hpp"
 
-#include <emscripten/emscripten.h>
-#include <emscripten/html5.h>
-#include <stdio.h>
+#include <functional>
+#include <cstdio>
+#include <cstdlib>
+#include <glm/glm.hpp>
+#include <cstdint>
+
+#include <GLFW/glfw3.h>
 #include <stdlib.h>
-
-
-#include <webgl/webgl1_ext.h>
-#include <webgl/webgl2_ext.h>
-
-#include <GLES2/gl2.h>
-
-GLuint compile_shader(GLenum shaderType, const char* src)
+#include <stdio.h>
+static const struct
 {
-    GLuint shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, &src, NULL);
-    glCompileShader(shader);
+    float x, y;
+    float r, g, b;
+} vertices[3] =
+    {
+        {-0.6f, -0.4f, 1.f, 0.f, 0.f},
+        {0.6f, -0.4f, 0.f, 1.f, 0.f},
+        {0.f, 0.6f, 0.f, 0.f, 1.f}};
 
-    GLint isCompiled = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-    if (!isCompiled) {
-        GLint maxLength = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-        char* buf = (char*)malloc(maxLength);
-        glGetShaderInfoLog(shader, maxLength, NULL, buf);
-        printf("%s\n", buf);
-        free(buf);
-        return 0;
-    }
+static const char *vertex_shader_text =
+    "uniform mat4 MVP;\n"
+    "attribute vec3 vCol;\n"
+    "attribute vec2 vPos;\n"
+    "varying vec3 color;\n"
+    "void main()\n"
+    "{\n"
+    "    gl_Position = MVP * vec4(vPos, 0.0, 1.0);\n"
+    "    color = vCol;\n"
+    "}\n";
 
-    return shader;
+static const char *fragment_shader_text =
+    "precision mediump float;\n"
+    "varying vec3 color;\n"
+    "void main()\n"
+    "{\n"
+    "    gl_FragColor = vec4(color, 1.0);\n"
+    "}\n";
+
+static void error_callback(int error, const char *description)
+{
+    fprintf(stderr, "Error: %s\n", description);
+}
+static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-GLuint create_program(GLuint vertexShader, GLuint fragmentShader)
+std::function<void()> loop;
+void main_loop() { loop(); }
+
+void check_error(GLuint shader)
 {
-    GLuint program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glBindAttribLocation(program, 0, "apos");
-    glBindAttribLocation(program, 1, "acolor");
+    GLint result;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
+    if (result == GL_FALSE)
+    {
+        GLint log_length;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
+        std::vector<GLchar> log(log_length);
+
+        GLsizei length;
+        glGetShaderInfoLog(shader, log.size(), &length, log.data());
+
+    }
+}
+
+int main(void)
+{
+    GLint mvp_location, vpos_location, vcol_location;
+    glfwSetErrorCallback(error_callback);
+    if (!glfwInit())
+        exit(EXIT_FAILURE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    auto window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        exit(EXIT_FAILURE);
+    }
+    glfwSetKeyCallback(window, key_callback);
+    glfwMakeContextCurrent(window);
+#ifdef __EMSCRIPTEN__
+#else
+    glewInit();
+#endif
+    glfwSwapInterval(1);
+    // NOTE: OpenGL error checks have been omitted for brevity
+    GLuint vertex_buffer;
+    glGenBuffers(1, &vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
+    glCompileShader(vertex_shader);
+    check_error(vertex_shader);
+
+    auto fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
+    glCompileShader(fragment_shader);
+    check_error(fragment_shader);
+
+    auto program = glCreateProgram();
+    glAttachShader(program, vertex_shader);
+    glAttachShader(program, fragment_shader);
     glLinkProgram(program);
-    return program;
-}
+    mvp_location = glGetUniformLocation(program, "MVP");
+    vpos_location = glGetAttribLocation(program, "vPos");
+    vcol_location = glGetAttribLocation(program, "vCol");
+    glEnableVertexAttribArray(vpos_location);
+    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
+                          sizeof(vertices[0]), (void *)0);
+    glEnableVertexAttribArray(vcol_location);
+    glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
+                          sizeof(vertices[0]), (void *)(sizeof(float) * 2));
 
-int main()
-{
-    EmscriptenWebGLContextAttributes attr;
-    emscripten_webgl_init_context_attributes(&attr);
-
-
-    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = emscripten_webgl_create_context("#canvas", &attr);
-    emscripten_webgl_make_context_current(ctx);
-
-    GLboolean extAvailable = emscripten_webgl_enable_WEBGL_multi_draw(ctx);
-
-    if (!extAvailable) {
-        EM_ASM({
-            xhr = new XMLHttpRequest();
-            xhr.open('GET', 'http://localhost:8888/report_result?skipped:%20WEBGL_multi_draw%20is%20not%20supported!');
-            xhr.send();
-            setTimeout(function() { window.close() }, 2000);
-        });
-        return 0;
-    }
-
-    static const char vertex_shader[] = "attribute vec4 apos;"
-                                        "attribute vec4 acolor;"
-                                        "varying vec4 color;"
-                                        "void main() {"
-                                        "color = acolor;"
-                                        "gl_Position = apos;"
-                                        "}";
-    GLuint vs = compile_shader(GL_VERTEX_SHADER, vertex_shader);
-
-    static const char fragment_shader[] = "precision lowp float;"
-                                          "varying vec4 color;"
-                                          "void main() {"
-                                          "gl_FragColor = color;"
-                                          "}";
-    GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
-
-    GLuint program = create_program(vs, fs);
-    glUseProgram(program);
-
-    static const float pos_and_color[] = {
-        //     x,     y, r, g, b
-        -0.5f,
-        -0.5f,
-        1,
-        0,
-        0,
-        0.5f,
-        -0.5f,
-        0,
-        1,
-        0,
-        -0.5f,
-        0.5f,
-        0,
-        0,
-        1,
-        0.5f,
-        0.5f,
-        1,
-        1,
-        1,
-        -0.5f,
-        0.5f,
-        0,
-        0,
-        1,
-        0.5f,
-        -0.5f,
-        0,
-        1,
-        0,
+    loop = [&] {
+        glm::mat4 mvp;
+        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat *)&mvp[0][0]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     };
 
-    // 2 -- 3
-    // | \  |
-    // |  \ |
-    // 0 -- 1
-    static const GLushort indices[] = {
-        0, 1, 2,
-        3, 2, 1
-    };
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(main_loop, 0, true);
+#else
+    while (!glfwWindowShouldClose(window))
+        main_loop();
+#endif
 
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(pos_and_color), pos_and_color, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 20, 0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 20, (void*)8);
-
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    // use element array buffer
-    GLuint elementBuffer;
-    glGenBuffers(1, &elementBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glClearColor(0.3f, 0.3f, 0.3f, 1);
-
-    GLint firsts[] = { 0, 3 };
-    GLsizei counts[] = { 3, 3 };
-    GLsizei instanceCounts[] = { 1, 1 };
-    const GLvoid* const offsets[] = { (GLvoid*)0, (GLvoid*)(3 * sizeof(GLushort)) };
-    GLsizei drawcount = 2;
-
-    glClear(GL_COLOR_BUFFER_BIT);
-    glMultiDrawArraysWEBGL(GL_TRIANGLES, firsts, counts, drawcount);
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    exit(EXIT_SUCCESS);
 }
