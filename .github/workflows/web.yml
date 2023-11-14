@@ -53,7 +53,13 @@ jobs:
         run: |
           git fetch
           git checkout gh-pages || (git checkout --orphan gh-pages && git rm -rf .)
-    
+      
+      - name: Move Results Back from Temp Directory
+        run: | 
+          mv /tmp/web-release/Graphics.html ./
+          mv /tmp/web-release/Graphics.js ./
+          mv /tmp/web-release/Graphics.wasm ./
+
       - name: Commit and Push to gh-pages
         run: |
           git config --local user.email "action@github.com"
