@@ -1,9 +1,9 @@
 #version 300
 
+precision highp float;
+
 in vec2 v_uv;
 out vec4 out_colour;
-
-precision highp float;
 
 uniform sampler2D u_screen_texture;
 
@@ -15,7 +15,7 @@ void main() {
     float threshold = 0.8;
     float amount = 0.5;
 
-    vec2 texture_size = textureSize(u_screen_texture, 0).xy;
+    vec2 texture_size = vec2(textureSize(u_screen_texture, 0).xy);
     vec4 result = vec4(0.0);
     vec4 colour = vec4(0.0);
     float value = 0.0;
