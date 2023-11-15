@@ -4,8 +4,8 @@ out vec4 out_colour;
 
 
 uniform sampler2D u_screen_texture;
-uniform float u_camera_near_plane = 0.01f;
-uniform float u_camera_far_plane = 1000.0f;
+float u_camera_near_plane = 0.01f;
+float u_camera_far_plane = 1000.0f;
 
 in vec2 v_uv;
 

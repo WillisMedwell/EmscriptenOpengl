@@ -23,11 +23,11 @@ struct PointLight {
 uniform PointLight u_point_lights[MAX_POINT_LIGHTS];
 uniform float u_point_lights_size;
 
-uniform vec3 warm_colour = vec3(0.87, 0.0, 0.0);
-uniform vec3 middle_colour = vec3(0.73, 0.0, 0.7);
-uniform vec3 cool_colour = vec3(0.0, 0.11, 0.71);
+vec3 warm_colour = vec3(0.87, 0.0, 0.0);
+vec3 middle_colour = vec3(0.73, 0.0, 0.7);
+vec3 cool_colour = vec3(0.0, 0.11, 0.71);
 
-uniform float blend_factor = 0.5;
+float blend_factor = 0.5;
 
 void main() {
     vec3 normal = normalize(v_normal);
