@@ -2,7 +2,6 @@
 precision highp float;
 out vec4 out_colour;
 
-
 uniform sampler2D u_screen_texture; // The original scene texture
 uniform float u_time;
 float u_grain_intensity = 0.05; 
@@ -38,10 +37,11 @@ void main() {
 
     // vignette
     vec2 center_coord = textureSize(u_screen_texture, 0) / 2;
-    float max_distance_to_center = length(center_coord);
-    float distance_to_center = length(center_coord - vec2(gl_FragCoord.xy));
+    float max_distance_to_center = length(vec2(center_coord));
+    float distance_to_center = length(vec2(center_coord) - vec2(gl_FragCoord.xy));
     float distance_to_center_normalised = 1 - distance_to_center / max_distance_to_center;
-    float remapped_distance = 1.0f - pow(10000.0f, -distance_to_center_normalised);
+    float one = 1.0;
+    float remapped_distance = one - pow(10000.0f, -distance_to_center_normalised);
     vec4 vignette_scale = vec4(vec3(remapped_distance), 1.0f);
 
 
