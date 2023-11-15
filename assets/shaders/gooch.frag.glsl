@@ -1,4 +1,5 @@
-#version 330 
+#version 300
+
 
 in vec3 v_normal;
 in vec3 v_frag_position;

@@ -1,4 +1,5 @@
-#version 330 
+#version 300
+
 
 struct PointLight {
     vec3 position;

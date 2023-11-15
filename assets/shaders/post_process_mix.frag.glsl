@@ -1,4 +1,5 @@
-#version 330 
+#version 300
+
 
 uniform sampler2D u_screen_texture; // The original scene texture
 uniform float u_time = 1.0; // Current time for dynamic grain

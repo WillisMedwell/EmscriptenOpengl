@@ -1,4 +1,5 @@
-#version 330 
+#version 300
+
 
 in vec4 v_pos;
 in vec4 v_normal;

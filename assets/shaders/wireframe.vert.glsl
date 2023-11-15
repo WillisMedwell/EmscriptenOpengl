@@ -1,4 +1,4 @@
-#version 330 
+#version 300
 
 layout(location = 0) in vec3 a_position; // The vertex position
 layout(location = 1) in vec3 a_norm; // The normal position
