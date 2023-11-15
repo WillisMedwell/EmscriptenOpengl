@@ -33,14 +33,14 @@ void main() {
     vec4 gamma_colour = linearToSRGBA(base_colour);
 
     // grain
-    vec4 grain_colour = vec4(vec3(rand(v_uv * u_time) * u_grain_intensity), 0.0);
+    vec4 grain_colour = vec4(vec3(rand(v_uv * u_time) * u_grain_intensity), float(0.0));
 
     // vignette
     vec2 center_coord = vec2(textureSize(u_screen_texture, 0) / 2);
     float max_distance_to_center = length(vec2(center_coord));
     float distance_to_center = length(vec2(center_coord) - vec2(gl_FragCoord.xy));
-    float distance_to_center_normalised = 1 - distance_to_center / max_distance_to_center;
-    float remapped_distance = float(1.0) - pow(float(10000.0f), -distance_to_center_normalised);
+    float distance_to_center_normalised = float(1) - distance_to_center / max_distance_to_center;
+    float remapped_distance = float(1.0) - pow(float(10000.0f), float(-distance_to_center_normalised));
     vec4 vignette_scale = vec4(vec3(remapped_distance), 1.0f);
 
     out_colour = clamp((gamma_colour - grain_colour), 0.0f, 1.0f) * vignette_scale;
