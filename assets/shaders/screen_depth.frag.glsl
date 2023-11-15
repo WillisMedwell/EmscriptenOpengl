@@ -1,4 +1,4 @@
-#version 330 core
+#version 330 
 
 uniform sampler2D u_screen_texture;
 uniform float u_camera_near_plane = 0.01f;

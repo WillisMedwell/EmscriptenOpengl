@@ -1,4 +1,4 @@
-#version 330 core
+#version 330 
 in vec2 v_uv;
 
 uniform sampler2D u_screen_texture;
