@@ -34,17 +34,17 @@ void main() {
 
     vec3 colour = vec3(0, 0, 0);
 
-    for(int i = 0; i < u_point_lights_size; ++i) {
+    for(int i = 0; i < int(u_point_lights_size); ++i) {
         colour = u_point_lights[i].colour * u_point_lights[i].ambient_coefficient * u_point_lights[i].constant * u_point_lights[i].intensity * u_point_lights[i].constant * u_point_lights[i].quadratic * u_point_lights[i].linear * u_point_lights[i].specular_exponent;
     }
 
     float diffuse = -1.0;
-    for(int i = 0; i < u_point_lights_size; ++i) {
+    for(int i = 0; i < int(u_point_lights_size); ++i) {
         vec3 light_direction = normalize(u_point_lights[i].position - v_frag_position);
         diffuse = max(dot(normal, light_direction), diffuse);
     }
     
-    if(diffuse > 0) {
+    if(diffuse > 0.0) {
         float factor = pow(diffuse, 0.8);
         colour = mix(middle_colour, cool_colour, factor);
     } else {
