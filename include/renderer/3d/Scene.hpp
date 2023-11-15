@@ -20,7 +20,7 @@ namespace SceneTypes
 	using ShaderKey = std::tuple<std::string, std::string, std::optional<std::string>>;
 	using MeshKey = std::string;
 	using TextureKey = std::string;
-} 	
+}
 
 struct SerialisedEntity;
 
@@ -146,9 +146,10 @@ inline auto Scene::loadResources() -> Expected<void, std::string_view>
 			auto printError = [&](std::string_view error) -> Expected<std::vector<MeshVariant>, std::string_view> {
 				if constexpr (BuildSettings::mode != BuildSettings::Mode::release) {
 					std::cerr
-						<< "Unable to load mesh. Where the error was:"
+						<< "Unable to load mesh: \""
+						<< mesh_key
+						<< "\".Where the error was:"
 						<< error
-						<< '\n'
 						<< std::endl;
 					exit(EXIT_FAILURE);
 				}
@@ -196,9 +197,10 @@ inline auto Scene::loadResources() -> Expected<void, std::string_view>
 			auto printError = [&](std::string_view error) -> Expected<std::vector<MeshVariant>, std::string_view> {
 				if constexpr (BuildSettings::mode != BuildSettings::Mode::release) {
 					std::cerr
-						<< "Unable to load mesh. Where the error was:"
+						<< "Unable to load mesh: \""
+						<< mesh_key
+						<< "\".Where the error was:"
 						<< error
-						<< '\n'
 						<< std::endl;
 					exit(EXIT_FAILURE);
 				}
