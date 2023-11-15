@@ -44,8 +44,6 @@ elseif(DEFINED EMSCRIPTEN)
     add_definitions(-DEMSCRIPTEN)
     add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS})
     target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -fexperimental-library)
-
-    file(GLOB_RECURSE ASSETS "assets/*.png" "assets/*.obj" "assets/*.json" "assets/*.glsl")
     
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_WEBGL2=1 -s USE_GLFW=3 -s FULL_ES3=1")

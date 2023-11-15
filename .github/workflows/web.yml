@@ -36,6 +36,7 @@ jobs:
           mkdir web-release
           mv Graphics.js web-release/
           mv Graphics.wasm web-release/
+          mv Graphics.data web-release/
           cd ..
           cd ..
           mv index.html build/
@@ -76,6 +77,7 @@ jobs:
           mv /tmp/web-release/index.html ./
           mv /tmp/web-release/Graphics.js ./
           mv /tmp/web-release/Graphics.wasm ./
+          mv /tmp/web-release/Graphics.data ./
 
       - name: Commit and Push to gh-pages
         run: |
