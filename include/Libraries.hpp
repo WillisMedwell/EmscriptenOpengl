@@ -14,11 +14,12 @@
 #include <emscripten/html5.h>
 #include <webgl/webgl1_ext.h>
 #include <webgl/webgl2_ext.h>
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #include <GLFW/glfw3.h>
 
 #elif BUILD_TARGET == NATIVE_BUILD
 #include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #endif 
 

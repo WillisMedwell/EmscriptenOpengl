@@ -1,0 +1,126 @@
+{
+    "Background-Colour": {
+        "r": 50,
+        "g": 50,
+        "b": 50
+    },
+    "Models": [
+        {
+            "Model-Parts": [
+                {
+                    "Mesh-File": "assets/objects/bullet.obj",
+                    "Shader-Files": [
+                        "assets/shaders/phong.vert.glsl",
+                        "assets/shaders/phong.frag.glsl",
+                        null
+                    ],
+                    "Transforms": {
+                        "Translation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "Scale": 1
+                    },
+                    "Needs-Point-Lights": true
+                },
+                {
+                    "Mesh-File": "assets/objects/cross.obj",
+                    "Shader-Files": [
+                        "assets/shaders/basic.vert.glsl",
+                        "assets/shaders/basic.frag.glsl",
+                        null
+                    ],
+                    "Transforms": {
+                        "Translation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "Scale": 1
+                    },
+                    "Needs-Point-Lights": false
+                }
+            ]
+        }
+    ],
+    "Camera": {
+        "Position": {
+            "x": 0,
+            "y": 2,
+            "z": 0
+        },
+        "Velocity": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        },
+        "Direction": {
+            "x": 0,
+            "y": 0.5,
+            "z": 0
+        }
+    },
+    "Point-Lights": [
+        {
+            "Position": {
+                "x": 5.0,
+                "y": 5.0,
+                "z": 5.0
+            },
+            "Attenuation": {
+                "Constant": 1.0,
+                "Linear": 0.09,
+                "Quadratic": 0.032
+            },
+            "Colour": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0
+            },
+            "Intensity": 1.0,
+            "Ambient-Coefficient": 0.1,
+            "Specular-Exponent": 32.0
+        },
+        {
+            "Position": {
+                "x": -5.0,
+                "y": 5.0,
+                "z": 5.0
+            },
+            "Attenuation": {
+                "Constant": 1.0,
+                "Linear": 0.09,
+                "Quadratic": 0.032
+            },
+            "Colour": {
+                "r": 0.6,
+                "g": 0.6,
+                "b": 0.6
+            },
+            "Intensity": 0.8,
+            "Ambient-Coefficient": 0.1,
+            "Specular-Exponent": 32.0
+        },
+        {
+            "Position": {
+                "x": 0.0,
+                "y": 8.0,
+                "z": -5.0
+            },
+            "Attenuation": {
+                "Constant": 1.0,
+                "Linear": 0.09,
+                "Quadratic": 0.032
+            },
+            "Colour": {
+                "r": 0.8,
+                "g": 0.8,
+                "b": 0.8
+            },
+            "Intensity": 0.6,
+            "Ambient-Coefficient": 0.1,
+            "Specular-Exponent": 32.0
+        }
+    ]
+}

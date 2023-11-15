@@ -1,0 +1,69 @@
+{
+    "Background-Colour": {
+        "r": 50,
+        "g": 50,
+        "b": 50
+    },
+    "Models": [
+        {
+            "Model-Parts": [
+                {
+                    "Mesh-File": "assets/objects/sphere.obj",
+                    "Shader-Files": [
+                        "assets/shaders/basic.vert.glsl",
+                        "assets/shaders/basic.frag.glsl",
+                        null
+                    ],
+                    "Transforms": {
+                        "Translation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "Scale": 1
+                    },
+                    "Needs-Point-Lights": false
+                }
+            ]
+        },
+        {
+            "Model-Parts": [
+                {
+                    "Mesh-File": "assets/objects/cross.obj",
+                    "Shader-Files": [
+                        "assets/shaders/basic.vert.glsl",
+                        "assets/shaders/basic.frag.glsl",
+                        null
+                    ],
+                    "Transforms": {
+                        "Translation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "Scale": 1
+                    },
+                    "Needs-Point-Lights": false
+                }
+            ]
+        }
+    ],
+    "Camera": {
+        "Position": {
+            "x": 0,
+            "y": 2,
+            "z": 0
+        },
+        "Velocity": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        },
+        "Direction": {
+            "x": 0,
+            "y": 0.5,
+            "z": 0
+        }
+    },
+    "Point-Lights": []
+}

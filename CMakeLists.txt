@@ -3,14 +3,17 @@ cmake_minimum_required(VERSION 3.11)
 project(Graphics)
 
 set(CMAKE_SUPPRESS_REGENERATION true)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c" "src/*.cxx")
 file(GLOB_RECURSE HEADERS "include/*.hpp" "include/*.h")
 
 find_package(glm CONFIG REQUIRED)
 find_package(glaze CONFIG REQUIRED)
+find_package(lodepng CONFIG REQUIRED) 
+
+file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
 
 if(NOT DEFINED EMSCRIPTEN)
     add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -33,20 +36,16 @@ if(NOT DEFINED EMSCRIPTEN)
             OpenGL::GL
             GLEW::GLEW
             glfw
+            glm::glm
+            glaze::glaze
+            lodepng
     )
 elseif(DEFINED EMSCRIPTEN)
     add_definitions(-DEMSCRIPTEN)
-
-    message(STATUS "EMSCRIPTEN BUILD")
-
     add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS})
+    target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -fexperimental-library)
 
-    message(STATUS "${CMAKE_SOURCE_DIR}")
-    message(STATUS "${CMAKE_SOURCE_DIR}")
-
-    message(STATUS "${HEADERS}")
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_WEBGL2=1 -s USE_GLFW=3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_WEBGL2=1 -s USE_GLFW=3 -s FULL_ES3=1")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_RUNTIME_METHODS='[\"callMain\"]' -s DEMANGLE_SUPPORT=1")
     set(CMAKE_EXECUTABLE_SUFFIX ".js")
 
@@ -61,5 +60,6 @@ elseif(DEFINED EMSCRIPTEN)
         PRIVATE 
             glm::glm
             glaze::glaze
+            lodepng
     )
 endif()
