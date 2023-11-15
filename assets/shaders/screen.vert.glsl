@@ -1,4 +1,5 @@
 #version 300
+precision highp float;
 
 layout (location = 0) in vec2 a_pos; // Position
 layout (location = 1) in vec2 a_uv; // Texture coordinates

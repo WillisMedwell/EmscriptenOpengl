@@ -1,4 +1,6 @@
 #version 300
+precision highp float;
+out vec4 out_colour;
 
 
 in vec4 v_pos;
@@ -56,5 +58,5 @@ void main() {
     finalColour = pow(finalColour, vec3(1.0 / 2.2));
     finalColour = clamp(finalColour, 0.0, 1.0);  // Clamping final color
 
-    gl_FragColor = vec4(finalColour, 1.0);
+    out_colour = vec4(finalColour, 1.0);
 }

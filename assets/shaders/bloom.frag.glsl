@@ -1,6 +1,9 @@
 #version 300
 
 in vec2 v_uv;
+out vec4 out_colour;
+
+precision highp float;
 
 uniform sampler2D u_screen_texture;
 
@@ -43,5 +46,5 @@ void main() {
     colour.b = max(t.b, colour.b);
     colour.a = max(t.a, colour.a);
 
-    gl_FragColor = colour;
+    out_colour = colour;
 }

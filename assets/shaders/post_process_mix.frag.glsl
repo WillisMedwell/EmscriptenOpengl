@@ -1,4 +1,6 @@
 #version 300
+precision highp float;
+out vec4 out_colour;
 
 
 uniform sampler2D u_screen_texture; // The original scene texture
@@ -43,6 +45,6 @@ void main() {
     vec4 vignette_scale = vec4(vec3(remapped_distance), 1);
 
 
-    //gl_FragColor = clamp((base_colour - grain_colour), 0, 1) * vignette_scale;
-    gl_FragColor = clamp((gamma_colour - grain_colour), 0, 1) * vignette_scale;
+    //out_colour = clamp((base_colour - grain_colour), 0, 1) * vignette_scale;
+    out_colour = clamp((gamma_colour - grain_colour), 0, 1) * vignette_scale;
 }

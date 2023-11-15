@@ -1,5 +1,5 @@
 #version 300
-
+precision highp float;
 layout(triangles) in;
 layout(line_strip, max_vertices = 6) out;
 

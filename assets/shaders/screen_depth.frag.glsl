@@ -1,4 +1,6 @@
 #version 300
+precision highp float;
+out vec4 out_colour;
 
 
 uniform sampler2D u_screen_texture;
@@ -15,5 +17,5 @@ float LineariseDepth(float depth) {
 void main() {
     float depth = texture(u_screen_texture, v_uv).r; // Get depth value
     float linearised_depth = LineariseDepth(depth) / u_camera_far_plane; // Normalize if needed
-    gl_FragColor = vec4(vec3(linearised_depth), 1.0); // Output grayscale depth
+    out_colour = vec4(vec3(linearised_depth), 1.0); // Output grayscale depth
 }

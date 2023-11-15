@@ -1,5 +1,5 @@
 #version 300
-
+precision highp float;
 
 struct PointLight {
     vec3 position;

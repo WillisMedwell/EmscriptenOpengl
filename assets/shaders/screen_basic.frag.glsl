@@ -1,12 +1,14 @@
 #version 300
-
+precision highp float;
 
 uniform sampler2D u_screen_texture;
+out vec4 out_colour;
+
 
 in vec2 v_uv;
 
 void main() {
-    gl_FragColor = clamp(texture(u_screen_texture, v_uv), 0.0, 1.0);
+    out_colour = clamp(texture(u_screen_texture, v_uv), 0.0, 1.0);
 }
 
 /*
@@ -25,7 +27,7 @@ void main() {
     vec2 pixelatedUV = floor(v_uv / pixelSize) * pixelSize;
 
     // Sample the texture using the adjusted coordinates
-    gl_FragColor = texture(u_screen_texture, pixelatedUV);
+    out_colour = texture(u_screen_texture, pixelatedUV);
 }
 */
 
@@ -53,7 +55,7 @@ void main() {
     vec4 grainColor = originalColor + vec4(grain, grain, grain, 0.0);
 
     // Output the final color
-    gl_FragColor = grainColor;
+    out_colour = grainColor;
 }
 */
 
@@ -104,6 +106,6 @@ void main() {
         resultColor = vec3(0.0f);
     }
 
-    gl_FragColor = vec4(resultColor, 1.0); // Assign to gl_FragColor
+    out_colour = vec4(resultColor, 1.0); // Assign to out_colour
 }
 */

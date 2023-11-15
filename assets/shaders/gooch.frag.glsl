@@ -1,4 +1,6 @@
 #version 300
+precision highp float;
+out vec4 out_colour;
 
 
 in vec3 v_normal;
@@ -50,5 +52,5 @@ void main() {
         float factor = pow(diffuse, 0.8);
         colour = mix(middle_colour, warm_colour, factor);
     }
-    gl_FragColor = vec4(mix(vec3(diffuse), colour, blend_factor), 1.0);
+    out_colour = vec4(mix(vec3(diffuse), colour, blend_factor), 1.0);
 }
