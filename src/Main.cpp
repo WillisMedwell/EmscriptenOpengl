@@ -36,8 +36,7 @@ auto printAndQuit = [](auto msg) -> Expected<void, std::string_view> {
 
 int main()
 {
-
-    fs::path current_path = fs::current_path();
+    fs::path current_path = fs::current_path().append("assets");
     print_directory(current_path);
 
     Application app;
