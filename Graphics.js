@@ -310,13 +310,13 @@ Module.expectedDataFileDownloads++;
   }, {
    "filename": "/assets/shaders/wireframe.geo.glsl",
    "start": 3841222,
-   "end": 3841786
+   "end": 3841792
   }, {
    "filename": "/assets/shaders/wireframe.vert.glsl",
-   "start": 3841786,
-   "end": 3842135
+   "start": 3841792,
+   "end": 3842141
   } ],
-  "remote_package_size": 3842135
+  "remote_package_size": 3842141
  });
 })();
 
