@@ -253,8 +253,7 @@ inline void DepthFrameBuffer::init(uint32_t width, uint32_t height)
 	{ // generate and bind, check for error.
 		m_fb = 0;
 		glGenFramebuffers(1, &m_fb.value());
-		m_fb = (m_fb.value() == 0) ? std::nullopt : m_fb;
-		bind();
+		glBindFramebuffer(GL_FRAMEBUFFER, m_fb.value());
 	}
 
 	{ // geneate texture/colour attachment.
@@ -267,7 +266,7 @@ inline void DepthFrameBuffer::init(uint32_t width, uint32_t height)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glBindFramebuffer(GL_FRAMEBUFFER, m_depth_attachment.value());
+
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depth_attachment.value(), 0);
 		/*glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);*/
