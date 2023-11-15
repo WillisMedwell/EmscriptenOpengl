@@ -1,5 +1,307 @@
 var Module = typeof Module != "undefined" ? Module : {};
 
+if (!Module.expectedDataFileDownloads) {
+ Module.expectedDataFileDownloads = 0;
+}
+
+Module.expectedDataFileDownloads++;
+
+(function() {
+ if (Module["ENVIRONMENT_IS_PTHREAD"] || Module["$ww"]) return;
+ var loadPackage = function(metadata) {
+  var PACKAGE_PATH = "";
+  if (typeof window === "object") {
+   PACKAGE_PATH = window["encodeURIComponent"](window.location.pathname.toString().substring(0, window.location.pathname.toString().lastIndexOf("/")) + "/");
+  } else if (typeof process === "undefined" && typeof location !== "undefined") {
+   PACKAGE_PATH = encodeURIComponent(location.pathname.toString().substring(0, location.pathname.toString().lastIndexOf("/")) + "/");
+  }
+  var PACKAGE_NAME = "Graphics.data";
+  var REMOTE_PACKAGE_BASE = "Graphics.data";
+  if (typeof Module["locateFilePackage"] === "function" && !Module["locateFile"]) {
+   Module["locateFile"] = Module["locateFilePackage"];
+   err("warning: you defined Module.locateFilePackage, that has been renamed to Module.locateFile (using your locateFilePackage for now)");
+  }
+  var REMOTE_PACKAGE_NAME = Module["locateFile"] ? Module["locateFile"](REMOTE_PACKAGE_BASE, "") : REMOTE_PACKAGE_BASE;
+  var REMOTE_PACKAGE_SIZE = metadata["remote_package_size"];
+  function fetchRemotePackage(packageName, packageSize, callback, errback) {
+   if (typeof process === "object" && typeof process.versions === "object" && typeof process.versions.node === "string") {
+    require("fs").readFile(packageName, function(err, contents) {
+     if (err) {
+      errback(err);
+     } else {
+      callback(contents.buffer);
+     }
+    });
+    return;
+   }
+   var xhr = new XMLHttpRequest;
+   xhr.open("GET", packageName, true);
+   xhr.responseType = "arraybuffer";
+   xhr.onprogress = function(event) {
+    var url = packageName;
+    var size = packageSize;
+    if (event.total) size = event.total;
+    if (event.loaded) {
+     if (!xhr.addedTotal) {
+      xhr.addedTotal = true;
+      if (!Module.dataFileDownloads) Module.dataFileDownloads = {};
+      Module.dataFileDownloads[url] = {
+       loaded: event.loaded,
+       total: size
+      };
+     } else {
+      Module.dataFileDownloads[url].loaded = event.loaded;
+     }
+     var total = 0;
+     var loaded = 0;
+     var num = 0;
+     for (var download in Module.dataFileDownloads) {
+      var data = Module.dataFileDownloads[download];
+      total += data.total;
+      loaded += data.loaded;
+      num++;
+     }
+     total = Math.ceil(total * Module.expectedDataFileDownloads / num);
+     if (Module["setStatus"]) Module["setStatus"](`Downloading data... (${loaded}/${total})`);
+    } else if (!Module.dataFileDownloads) {
+     if (Module["setStatus"]) Module["setStatus"]("Downloading data...");
+    }
+   };
+   xhr.onerror = function(event) {
+    throw new Error("NetworkError for: " + packageName);
+   };
+   xhr.onload = function(event) {
+    if (xhr.status == 200 || xhr.status == 304 || xhr.status == 206 || (xhr.status == 0 && xhr.response)) {
+     var packageData = xhr.response;
+     callback(packageData);
+    } else {
+     throw new Error(xhr.statusText + " : " + xhr.responseURL);
+    }
+   };
+   xhr.send(null);
+  }
+  function handleError(error) {
+   console.error("package error:", error);
+  }
+  var fetchedCallback = null;
+  var fetched = Module["getPreloadedPackage"] ? Module["getPreloadedPackage"](REMOTE_PACKAGE_NAME, REMOTE_PACKAGE_SIZE) : null;
+  if (!fetched) fetchRemotePackage(REMOTE_PACKAGE_NAME, REMOTE_PACKAGE_SIZE, function(data) {
+   if (fetchedCallback) {
+    fetchedCallback(data);
+    fetchedCallback = null;
+   } else {
+    fetched = data;
+   }
+  }, handleError);
+  function runWithFS() {
+   function assert(check, msg) {
+    if (!check) throw msg + (new Error).stack;
+   }
+   Module["FS_createPath"]("/", "assets", true, true);
+   Module["FS_createPath"]("/assets", "fonts", true, true);
+   Module["FS_createPath"]("/assets", "images", true, true);
+   Module["FS_createPath"]("/assets", "objects", true, true);
+   Module["FS_createPath"]("/assets", "scenes", true, true);
+   Module["FS_createPath"]("/assets", "shaders", true, true);
+   /** @constructor */ function DataRequest(start, end, audio) {
+    this.start = start;
+    this.end = end;
+    this.audio = audio;
+   }
+   DataRequest.prototype = {
+    requests: {},
+    open: function(mode, name) {
+     this.name = name;
+     this.requests[name] = this;
+     Module["addRunDependency"](`fp ${this.name}`);
+    },
+    send: function() {},
+    onload: function() {
+     var byteArray = this.byteArray.subarray(this.start, this.end);
+     this.finish(byteArray);
+    },
+    finish: function(byteArray) {
+     var that = this;
+     Module["FS_createDataFile"](this.name, null, byteArray, true, true, true);
+     Module["removeRunDependency"](`fp ${that.name}`);
+     this.requests[this.name] = null;
+    }
+   };
+   var files = metadata["files"];
+   for (var i = 0; i < files.length; ++i) {
+    new DataRequest(files[i]["start"], files[i]["end"], files[i]["audio"] || 0).open("GET", files[i]["filename"]);
+   }
+   function processPackageData(arrayBuffer) {
+    assert(arrayBuffer, "Loading data file failed.");
+    assert(arrayBuffer.constructor.name === ArrayBuffer.name, "bad input to processPackageData");
+    var byteArray = new Uint8Array(arrayBuffer);
+    var curr;
+    DataRequest.prototype.byteArray = byteArray;
+    var files = metadata["files"];
+    for (var i = 0; i < files.length; ++i) {
+     DataRequest.prototype.requests[files[i].filename].onload();
+    }
+    Module["removeRunDependency"]("datafile_Graphics.data");
+   }
+   Module["addRunDependency"]("datafile_Graphics.data");
+   if (!Module.preloadResults) Module.preloadResults = {};
+   Module.preloadResults[PACKAGE_NAME] = {
+    fromCache: false
+   };
+   if (fetched) {
+    processPackageData(fetched);
+    fetched = null;
+   } else {
+    fetchedCallback = processPackageData;
+   }
+  }
+  if (Module["calledRun"]) {
+   runWithFS();
+  } else {
+   if (!Module["preRun"]) Module["preRun"] = [];
+   Module["preRun"].push(runWithFS);
+  }
+ };
+ loadPackage({
+  "files": [ {
+   "filename": "/assets/fonts/PlusJakartaSans-Regular.ttf",
+   "start": 0,
+   "end": 94764
+  }, {
+   "filename": "/assets/images/cube_texture.png",
+   "start": 94764,
+   "end": 236557
+  }, {
+   "filename": "/assets/images/dice.png",
+   "start": 236557,
+   "end": 286638
+  }, {
+   "filename": "/assets/objects/cube_texture.png",
+   "start": 286638,
+   "end": 428431
+  }, {
+   "filename": "/assets/objects/floor_texture.png",
+   "start": 428431,
+   "end": 2070276
+  }, {
+   "filename": "/assets/scenes/basic.json",
+   "start": 2070276,
+   "end": 2072078
+  }, {
+   "filename": "/assets/scenes/entity_scene.json",
+   "start": 2072078,
+   "end": 2072422
+  }, {
+   "filename": "/assets/scenes/gooch.json",
+   "start": 2072422,
+   "end": 2074734
+  }, {
+   "filename": "/assets/scenes/normals.json",
+   "start": 2074734,
+   "end": 2076538
+  }, {
+   "filename": "/assets/scenes/phong.json",
+   "start": 2076538,
+   "end": 2079803
+  }, {
+   "filename": "/assets/scenes/texture.json",
+   "start": 2079803,
+   "end": 2083218
+  }, {
+   "filename": "/assets/scenes/wireframe.json",
+   "start": 2083218,
+   "end": 2084996
+  }, {
+   "filename": "/assets/shaders/basic.frag.glsl",
+   "start": 2084996,
+   "end": 2085078
+  }, {
+   "filename": "/assets/shaders/basic.vert.glsl",
+   "start": 2085078,
+   "end": 2085418
+  }, {
+   "filename": "/assets/shaders/bloom.frag.glsl",
+   "start": 2085418,
+   "end": 2086596
+  }, {
+   "filename": "/assets/shaders/gooch.frag.glsl",
+   "start": 2086596,
+   "end": 2088160
+  }, {
+   "filename": "/assets/shaders/gooch.vert.glsl",
+   "start": 2088160,
+   "end": 2088999
+  }, {
+   "filename": "/assets/shaders/normals.frag.glsl",
+   "start": 2088999,
+   "end": 2089162
+  }, {
+   "filename": "/assets/shaders/normals.vert.glsl",
+   "start": 2089162,
+   "end": 2089588
+  }, {
+   "filename": "/assets/shaders/phong.frag.glsl",
+   "start": 2089588,
+   "end": 2091290
+  }, {
+   "filename": "/assets/shaders/phong.vert.glsl",
+   "start": 2091290,
+   "end": 2092135
+  }, {
+   "filename": "/assets/shaders/post_process_mix.frag.glsl",
+   "start": 2092135,
+   "end": 2093697
+  }, {
+   "filename": "/assets/shaders/screen.vert.glsl",
+   "start": 2093697,
+   "end": 2093915
+  }, {
+   "filename": "/assets/shaders/screen_basic.frag.glsl",
+   "start": 2093915,
+   "end": 2097011
+  }, {
+   "filename": "/assets/shaders/screen_depth.frag.glsl",
+   "start": 2097011,
+   "end": 2097675
+  }, {
+   "filename": "/assets/shaders/texture.frag.glsl",
+   "start": 2097675,
+   "end": 2097874
+  }, {
+   "filename": "/assets/shaders/texture.vert.glsl",
+   "start": 2097874,
+   "end": 2098246
+  }, {
+   "filename": "/assets/shaders/white.frag.glsl",
+   "start": 2098246,
+   "end": 2098325
+  }, {
+   "filename": "/assets/shaders/wireframe.frag.glsl",
+   "start": 2098325,
+   "end": 2098439
+  }, {
+   "filename": "/assets/shaders/wireframe.geo.glsl",
+   "start": 2098439,
+   "end": 2098986
+  }, {
+   "filename": "/assets/shaders/wireframe.vert.glsl",
+   "start": 2098986,
+   "end": 2099318
+  } ],
+  "remote_package_size": 2099318
+ });
+})();
+
+if (Module["ENVIRONMENT_IS_PTHREAD"] || Module["$ww"]) Module["preRun"] = [];
+
+var necessaryPreJSTasks = Module["preRun"].slice();
+
+if (!Module["preRun"]) throw "Module.preRun should exist because file support used it; did a pre-js delete it?";
+
+necessaryPreJSTasks.forEach(function(task) {
+ if (Module["preRun"].indexOf(task) < 0) throw "All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?";
+});
+
 var moduleOverrides = Object.assign({}, Module);
 
 var arguments_ = [];
@@ -325,6 +627,26 @@ function segfault() {
 
 function alignfault() {
  abort("alignment fault");
+}
+
+function intArrayFromBase64(s) {
+ if (typeof ENVIRONMENT_IS_NODE != "undefined" && ENVIRONMENT_IS_NODE) {
+  var buf = Buffer.from(s, "base64");
+  return new Uint8Array(buf.buffer, buf.byteOffset, buf.length);
+ }
+ var decoded = atob(s);
+ var bytes = new Uint8Array(decoded.length);
+ for (var i = 0; i < decoded.length; ++i) {
+  bytes[i] = decoded.charCodeAt(i);
+ }
+ return bytes;
+}
+
+function tryParseAsDataURI(filename) {
+ if (!isDataURI(filename)) {
+  return;
+ }
+ return intArrayFromBase64(filename.slice(dataURIPrefix.length));
 }
 
 var wasmMemory;
@@ -7161,6 +7483,8 @@ var _strftime = (s, maxsize, format, tm) => {
 
 var _strftime_l = (s, maxsize, format, tm, loc) => _strftime(s, maxsize, format, tm);
 
+var FS_unlink = path => FS.unlink(path);
+
 var FSNode = /** @constructor */ function(parent, name, mode, rdev) {
  if (!parent) {
   parent = this;
@@ -7214,6 +7538,18 @@ FS.FSNode = FSNode;
 FS.createPreloadedFile = FS_createPreloadedFile;
 
 FS.staticInit();
+
+Module["FS_createPath"] = FS.createPath;
+
+Module["FS_createDataFile"] = FS.createDataFile;
+
+Module["FS_createPreloadedFile"] = FS.createPreloadedFile;
+
+Module["FS_unlink"] = FS.unlink;
+
+Module["FS_createLazyFile"] = FS.createLazyFile;
+
+Module["FS_createDevice"] = FS.createDevice;
 
 Module["requestFullscreen"] = Browser.requestFullscreen;
 
@@ -7390,13 +7726,29 @@ var dynCall_iiiiijj = Module["dynCall_iiiiijj"] = createExportWrapper("dynCall_i
 
 var dynCall_iiiiiijj = Module["dynCall_iiiiiijj"] = createExportWrapper("dynCall_iiiiiijj");
 
+Module["addRunDependency"] = addRunDependency;
+
+Module["removeRunDependency"] = removeRunDependency;
+
+Module["FS_createPath"] = FS.createPath;
+
+Module["FS_createLazyFile"] = FS.createLazyFile;
+
+Module["FS_createDevice"] = FS.createDevice;
+
 Module["callMain"] = callMain;
 
-var missingLibrarySymbols = [ "writeI53ToI64", "writeI53ToI64Clamped", "writeI53ToI64Signaling", "writeI53ToU64Clamped", "writeI53ToU64Signaling", "readI53FromI64", "readI53FromU64", "convertI32PairToI53", "convertU32PairToI53", "growMemory", "ydayFromDate", "inetPton4", "inetNtop4", "inetPton6", "inetNtop6", "readSockaddr", "writeSockaddr", "getHostByName", "getCallstack", "emscriptenLog", "convertPCtoSourceLocation", "readEmAsmArgs", "jstoi_s", "listenOnce", "autoResumeAudioContext", "dynCallLegacy", "getDynCaller", "dynCall", "asmjsMangle", "handleAllocatorInit", "HandleAllocator", "getNativeTypeSize", "STACK_SIZE", "STACK_ALIGN", "POINTER_SIZE", "ASSERTIONS", "getCFunc", "ccall", "cwrap", "uleb128Encode", "sigToWasmTypes", "generateFuncType", "convertJsFunctionToWasm", "getEmptyTableSlot", "updateTableMap", "getFunctionAddress", "addFunction", "removeFunction", "reallyNegative", "strLen", "reSign", "formatString", "intArrayToString", "AsciiToString", "UTF16ToString", "stringToUTF16", "lengthBytesUTF16", "UTF32ToString", "stringToUTF32", "lengthBytesUTF32", "registerKeyEventCallback", "maybeCStringToJsString", "findEventTarget", "findCanvasEventTarget", "getBoundingClientRect", "fillMouseEventData", "registerMouseEventCallback", "registerWheelEventCallback", "registerUiEventCallback", "registerFocusEventCallback", "fillDeviceOrientationEventData", "registerDeviceOrientationEventCallback", "fillDeviceMotionEventData", "registerDeviceMotionEventCallback", "screenOrientation", "fillOrientationChangeEventData", "registerOrientationChangeEventCallback", "fillFullscreenChangeEventData", "registerFullscreenChangeEventCallback", "JSEvents_requestFullscreen", "JSEvents_resizeCanvasForFullscreen", "registerRestoreOldStyle", "hideEverythingExceptGivenElement", "restoreHiddenElements", "setLetterbox", "softFullscreenResizeWebGLRenderTarget", "doRequestFullscreen", "fillPointerlockChangeEventData", "registerPointerlockChangeEventCallback", "registerPointerlockErrorEventCallback", "requestPointerLock", "fillVisibilityChangeEventData", "registerVisibilityChangeEventCallback", "registerTouchEventCallback", "fillGamepadEventData", "registerGamepadEventCallback", "registerBeforeUnloadEventCallback", "fillBatteryEventData", "battery", "registerBatteryEventCallback", "setCanvasElementSize", "getCanvasElementSize", "checkWasiClock", "wasiRightsToMuslOFlags", "wasiOFlagsToMuslOFlags", "createDyncallWrapper", "setImmediateWrapped", "clearImmediateWrapped", "polyfillSetImmediate", "getPromise", "makePromise", "idsToPromises", "makePromiseCallback", "findMatchingCatch", "getSocketFromFD", "getSocketAddress", "FS_unlink", "FS_mkdirTree", "_setNetworkCallback", "emscriptenWebGLGet", "emscriptenWebGLGetUniform", "emscriptenWebGLGetVertexAttrib", "__glGetActiveAttribOrUniform", "emscriptenWebGLGetBufferBinding", "emscriptenWebGLValidateMapBufferTarget", "writeGLArray", "registerWebGlEventCallback", "runAndAbortIfError", "SDL_unicode", "SDL_ttfContext", "SDL_audio", "emscriptenWebGLGetIndexed", "ALLOC_NORMAL", "ALLOC_STACK", "allocate", "writeStringToMemory", "writeAsciiToMemory" ];
+Module["FS_createPreloadedFile"] = FS.createPreloadedFile;
+
+Module["FS_createDataFile"] = FS.createDataFile;
+
+Module["FS_unlink"] = FS.unlink;
+
+var missingLibrarySymbols = [ "writeI53ToI64", "writeI53ToI64Clamped", "writeI53ToI64Signaling", "writeI53ToU64Clamped", "writeI53ToU64Signaling", "readI53FromI64", "readI53FromU64", "convertI32PairToI53", "convertU32PairToI53", "growMemory", "ydayFromDate", "inetPton4", "inetNtop4", "inetPton6", "inetNtop6", "readSockaddr", "writeSockaddr", "getHostByName", "getCallstack", "emscriptenLog", "convertPCtoSourceLocation", "readEmAsmArgs", "jstoi_s", "listenOnce", "autoResumeAudioContext", "dynCallLegacy", "getDynCaller", "dynCall", "asmjsMangle", "handleAllocatorInit", "HandleAllocator", "getNativeTypeSize", "STACK_SIZE", "STACK_ALIGN", "POINTER_SIZE", "ASSERTIONS", "getCFunc", "ccall", "cwrap", "uleb128Encode", "sigToWasmTypes", "generateFuncType", "convertJsFunctionToWasm", "getEmptyTableSlot", "updateTableMap", "getFunctionAddress", "addFunction", "removeFunction", "reallyNegative", "strLen", "reSign", "formatString", "intArrayToString", "AsciiToString", "UTF16ToString", "stringToUTF16", "lengthBytesUTF16", "UTF32ToString", "stringToUTF32", "lengthBytesUTF32", "registerKeyEventCallback", "maybeCStringToJsString", "findEventTarget", "findCanvasEventTarget", "getBoundingClientRect", "fillMouseEventData", "registerMouseEventCallback", "registerWheelEventCallback", "registerUiEventCallback", "registerFocusEventCallback", "fillDeviceOrientationEventData", "registerDeviceOrientationEventCallback", "fillDeviceMotionEventData", "registerDeviceMotionEventCallback", "screenOrientation", "fillOrientationChangeEventData", "registerOrientationChangeEventCallback", "fillFullscreenChangeEventData", "registerFullscreenChangeEventCallback", "JSEvents_requestFullscreen", "JSEvents_resizeCanvasForFullscreen", "registerRestoreOldStyle", "hideEverythingExceptGivenElement", "restoreHiddenElements", "setLetterbox", "softFullscreenResizeWebGLRenderTarget", "doRequestFullscreen", "fillPointerlockChangeEventData", "registerPointerlockChangeEventCallback", "registerPointerlockErrorEventCallback", "requestPointerLock", "fillVisibilityChangeEventData", "registerVisibilityChangeEventCallback", "registerTouchEventCallback", "fillGamepadEventData", "registerGamepadEventCallback", "registerBeforeUnloadEventCallback", "fillBatteryEventData", "battery", "registerBatteryEventCallback", "setCanvasElementSize", "getCanvasElementSize", "checkWasiClock", "wasiRightsToMuslOFlags", "wasiOFlagsToMuslOFlags", "createDyncallWrapper", "setImmediateWrapped", "clearImmediateWrapped", "polyfillSetImmediate", "getPromise", "makePromise", "idsToPromises", "makePromiseCallback", "findMatchingCatch", "getSocketFromFD", "getSocketAddress", "FS_mkdirTree", "_setNetworkCallback", "emscriptenWebGLGet", "emscriptenWebGLGetUniform", "emscriptenWebGLGetVertexAttrib", "__glGetActiveAttribOrUniform", "emscriptenWebGLGetBufferBinding", "emscriptenWebGLValidateMapBufferTarget", "writeGLArray", "registerWebGlEventCallback", "runAndAbortIfError", "SDL_unicode", "SDL_ttfContext", "SDL_audio", "emscriptenWebGLGetIndexed", "ALLOC_NORMAL", "ALLOC_STACK", "allocate", "writeStringToMemory", "writeAsciiToMemory" ];
 
 missingLibrarySymbols.forEach(missingLibrarySymbol);
 
-var unexportedSymbols = [ "run", "addOnPreRun", "addOnInit", "addOnPreMain", "addOnExit", "addOnPostRun", "addRunDependency", "removeRunDependency", "FS_createFolder", "FS_createPath", "FS_createLazyFile", "FS_createLink", "FS_createDevice", "FS_readFile", "out", "err", "abort", "wasmMemory", "wasmExports", "stackAlloc", "stackSave", "stackRestore", "getTempRet0", "setTempRet0", "writeStackCookie", "checkStackCookie", "convertI32PairToI53Checked", "ptrToString", "zeroMemory", "exitJS", "getHeapMax", "abortOnCannotGrowMemory", "ENV", "MONTH_DAYS_REGULAR", "MONTH_DAYS_LEAP", "MONTH_DAYS_REGULAR_CUMULATIVE", "MONTH_DAYS_LEAP_CUMULATIVE", "isLeapYear", "arraySum", "addDays", "ERRNO_CODES", "ERRNO_MESSAGES", "setErrNo", "DNS", "Protocols", "Sockets", "initRandomFill", "randomFill", "timers", "warnOnce", "UNWIND_CACHE", "readEmAsmArgsArray", "jstoi_q", "getExecutableName", "handleException", "keepRuntimeAlive", "runtimeKeepalivePush", "runtimeKeepalivePop", "callUserCallback", "maybeExit", "asyncLoad", "alignMemory", "mmapAlloc", "wasmTable", "noExitRuntime", "freeTableIndexes", "functionsInTableMap", "unSign", "setValue", "getValue", "PATH", "PATH_FS", "UTF8Decoder", "UTF8ArrayToString", "UTF8ToString", "stringToUTF8Array", "stringToUTF8", "lengthBytesUTF8", "intArrayFromString", "stringToAscii", "UTF16Decoder", "stringToNewUTF8", "stringToUTF8OnStack", "writeArrayToMemory", "JSEvents", "specialHTMLTargets", "currentFullscreenStrategy", "restoreOldWindowedStyle", "demangle", "demangleAll", "jsStackTrace", "stackTrace", "ExitStatus", "getEnvStrings", "doReadv", "doWritev", "safeSetTimeout", "promiseMap", "uncaughtExceptionCount", "exceptionLast", "exceptionCaught", "ExceptionInfo", "Browser", "setMainLoop", "wget", "SYSCALLS", "preloadPlugins", "FS_createPreloadedFile", "FS_modeStringToFlags", "FS_getMode", "FS_stdin_getChar_buffer", "FS_stdin_getChar", "FS", "FS_createDataFile", "MEMFS", "TTY", "PIPEFS", "SOCKFS", "tempFixedLengthArray", "miniTempWebGLFloatBuffers", "miniTempWebGLIntBuffers", "heapObjectForWebGLType", "heapAccessShiftForWebGLHeap", "webgl_enable_ANGLE_instanced_arrays", "webgl_enable_OES_vertex_array_object", "webgl_enable_WEBGL_draw_buffers", "webgl_enable_WEBGL_multi_draw", "GL", "computeUnpackAlignedImageSize", "colorChannelsInGlTextureFormat", "emscriptenWebGLGetTexPixelData", "__glGenObject", "webglGetUniformLocation", "webglPrepareUniformLocationsBeforeFirstUse", "webglGetLeftBracePos", "emscripten_webgl_power_preferences", "AL", "GLUT", "EGL", "GLEW", "IDBStore", "SDL", "SDL_gfx", "GLFW_Window", "GLFW", "webgl_enable_WEBGL_draw_instanced_base_vertex_base_instance", "webgl_enable_WEBGL_multi_draw_instanced_base_vertex_base_instance", "allocateUTF8", "allocateUTF8OnStack" ];
+var unexportedSymbols = [ "run", "addOnPreRun", "addOnInit", "addOnPreMain", "addOnExit", "addOnPostRun", "FS_createFolder", "FS_createLink", "FS_readFile", "out", "err", "abort", "wasmMemory", "wasmExports", "stackAlloc", "stackSave", "stackRestore", "getTempRet0", "setTempRet0", "writeStackCookie", "checkStackCookie", "convertI32PairToI53Checked", "ptrToString", "zeroMemory", "exitJS", "getHeapMax", "abortOnCannotGrowMemory", "ENV", "MONTH_DAYS_REGULAR", "MONTH_DAYS_LEAP", "MONTH_DAYS_REGULAR_CUMULATIVE", "MONTH_DAYS_LEAP_CUMULATIVE", "isLeapYear", "arraySum", "addDays", "ERRNO_CODES", "ERRNO_MESSAGES", "setErrNo", "DNS", "Protocols", "Sockets", "initRandomFill", "randomFill", "timers", "warnOnce", "UNWIND_CACHE", "readEmAsmArgsArray", "jstoi_q", "getExecutableName", "handleException", "keepRuntimeAlive", "runtimeKeepalivePush", "runtimeKeepalivePop", "callUserCallback", "maybeExit", "asyncLoad", "alignMemory", "mmapAlloc", "wasmTable", "noExitRuntime", "freeTableIndexes", "functionsInTableMap", "unSign", "setValue", "getValue", "PATH", "PATH_FS", "UTF8Decoder", "UTF8ArrayToString", "UTF8ToString", "stringToUTF8Array", "stringToUTF8", "lengthBytesUTF8", "intArrayFromString", "stringToAscii", "UTF16Decoder", "stringToNewUTF8", "stringToUTF8OnStack", "writeArrayToMemory", "JSEvents", "specialHTMLTargets", "currentFullscreenStrategy", "restoreOldWindowedStyle", "demangle", "demangleAll", "jsStackTrace", "stackTrace", "ExitStatus", "getEnvStrings", "doReadv", "doWritev", "safeSetTimeout", "promiseMap", "uncaughtExceptionCount", "exceptionLast", "exceptionCaught", "ExceptionInfo", "Browser", "setMainLoop", "wget", "SYSCALLS", "preloadPlugins", "FS_modeStringToFlags", "FS_getMode", "FS_stdin_getChar_buffer", "FS_stdin_getChar", "FS", "MEMFS", "TTY", "PIPEFS", "SOCKFS", "tempFixedLengthArray", "miniTempWebGLFloatBuffers", "miniTempWebGLIntBuffers", "heapObjectForWebGLType", "heapAccessShiftForWebGLHeap", "webgl_enable_ANGLE_instanced_arrays", "webgl_enable_OES_vertex_array_object", "webgl_enable_WEBGL_draw_buffers", "webgl_enable_WEBGL_multi_draw", "GL", "computeUnpackAlignedImageSize", "colorChannelsInGlTextureFormat", "emscriptenWebGLGetTexPixelData", "__glGenObject", "webglGetUniformLocation", "webglPrepareUniformLocationsBeforeFirstUse", "webglGetLeftBracePos", "emscripten_webgl_power_preferences", "AL", "GLUT", "EGL", "GLEW", "IDBStore", "SDL", "SDL_gfx", "GLFW_Window", "GLFW", "webgl_enable_WEBGL_draw_instanced_base_vertex_base_instance", "webgl_enable_WEBGL_multi_draw_instanced_base_vertex_base_instance", "allocateUTF8", "allocateUTF8OnStack" ];
 
 unexportedSymbols.forEach(unexportedRuntimeSymbol);
 
