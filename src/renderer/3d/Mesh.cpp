@@ -23,9 +23,11 @@ auto loadMeshAs<MeshType::positions_normals_uvs>(const std::string& content)->Ex
 namespace MeshLoader {
 	auto fromObj(std::filesystem::path obj_path) noexcept -> Expected<std::vector<MeshVariant>, std::string_view>
 	{
+#if BUILD_TARGET == NATIVE_BUILD
 		if (!std::filesystem::exists(obj_path)) {
 			return { "Specified file cannot be found." };
 		}
+#endif   
 		if (obj_path.extension() != ".obj") {
 			return { "The file format must be .obj." };
 		}
