@@ -28,7 +28,7 @@ auto VertexArray::bind() noexcept -> void
 {
 	if constexpr (BuildSettings::mode != BuildSettings::Mode::release) {
 		if (!m_vao) {
-			std::cerr << "VertexBuffer failed, trying to \"bind\" an unitialised vertex array.";
+			std::cerr << "VertexBuffer failed, trying to \"bind\" an unitialised vertex array.\n" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -39,7 +39,7 @@ auto VertexArray::unbind() noexcept -> void
 {
 	if constexpr (BuildSettings::mode != BuildSettings::Mode::release) {
 		if (!m_vao) {
-			std::cerr << "VertexBuffer failed, trying to \"unbind\" an unitialised vertex array.";
+			std::cerr << "VertexBuffer failed, trying to \"unbind\" an unitialised vertex array.\n" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -50,7 +50,7 @@ auto VertexArray::attachBufferAndLayout(VertexBuffer& vb, VertexBufferLayout& la
 {
 	if constexpr (BuildSettings::mode != BuildSettings::Mode::release) {
 		if (!m_vao) {
-			std::cerr << "VertexBuffer failed, trying to \"attach\" to an unitialised vertex array.";
+			std::cerr << "VertexBuffer failed, trying to \"attach\" to an unitialised vertex array.\n" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 	}

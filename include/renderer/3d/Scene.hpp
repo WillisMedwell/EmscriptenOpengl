@@ -148,6 +148,7 @@ inline auto Scene::loadResources() -> Expected<void, std::string_view>
 					std::cerr
 						<< "Unable to load mesh. Where the error was:"
 						<< error
+						<< '\n'
 						<< std::endl;
 					exit(EXIT_FAILURE);
 				}
@@ -197,6 +198,7 @@ inline auto Scene::loadResources() -> Expected<void, std::string_view>
 					std::cerr
 						<< "Unable to load mesh. Where the error was:"
 						<< error
+						<< '\n'
 						<< std::endl;
 					exit(EXIT_FAILURE);
 				}

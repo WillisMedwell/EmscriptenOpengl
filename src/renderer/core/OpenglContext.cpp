@@ -53,9 +53,11 @@ static void GLAPIENTRY openglDebugCallback(GLenum source, GLenum type, GLuint id
               << "Type: " << typeStr << "\n"
               << "ID: " << id << "\n"
               << "Severity: " << severityStr << "\n"
-              << "Message: " << message << "\n";
+              << "Message: " << message 
+			  << "\n" << std::endl;
 
     if (severity == GL_DEBUG_SEVERITY_HIGH) {
+
 		assert(false);
         exit(EXIT_FAILURE);
     }

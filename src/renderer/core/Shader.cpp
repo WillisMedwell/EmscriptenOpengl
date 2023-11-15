@@ -12,7 +12,8 @@ static auto readRawFile(const std::filesystem::path& path) -> std::string
 			std::cerr
 				<< "File \""
 				<< path.string()
-				<< "\" does not exist.";
+				<< "\" does not exist.\n"
+				<< std::endl;
 			exit(EXIT_FAILURE);
 		}
 		std::ifstream f(path);
@@ -21,7 +22,8 @@ static auto readRawFile(const std::filesystem::path& path) -> std::string
 			std::cerr
 				<< "File \""
 				<< path.string()
-				<< "\" is inaccessible.";
+				<< "\" is inaccessible.\n"
+				<< std::endl;
 			exit(EXIT_FAILURE);
 		}
 		return std::string{ std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>() };
@@ -54,7 +56,9 @@ static auto compileShader(uint32_t type, const std::string& source, const std::f
 				<< "\""
 				<< path.string()
 				<< "\".\n"
-				<< std::string_view(error_chars);
+				<< std::string_view(error_chars)
+				<< '\n'
+				<< std::endl;
 
 			glDeleteShader(shader);
 			exit(EXIT_FAILURE);
@@ -111,10 +115,16 @@ void Shader::uploadToGpu() noexcept
 			if (infoLogLength > 0) {
 				std::vector<char> infoLog(infoLogLength);
 				glGetProgramInfoLog(m_program_id.value(), infoLogLength, nullptr, &infoLog[0]);
-				std::cerr << "Unable to validate the program when constructing the shader. Error: " << &infoLog[0];
+				std::cerr 
+					<< "Unable to validate the program when constructing the shader. Error: " 
+					<< &infoLog[0]
+					<< '\n'
+					<< std::endl;
 			}
 			else {
-				std::cerr << "Unable to validate the program when constructing the shader. No additional info.";
+				std::cerr 
+					<< "Unable to validate the program when constructing the shader. No additional info.\n" 
+					<< std::endl;
 			}
 			exit(EXIT_FAILURE);
 		}
@@ -125,7 +135,7 @@ void Shader::bind() noexcept
 {
 	if constexpr (BuildSettings::mode != BuildSettings::Mode::release) {
 		if (!m_program_id) {
-			std::cerr << "Trying to bind shader that isn't on GPU.";
+			std::cerr << "Trying to bind shader that isn't on GPU.\n" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -135,8 +145,7 @@ void Shader::unbind() noexcept
 {
 	if constexpr (BuildSettings::mode != BuildSettings::Mode::release) {
 		if (!m_program_id) {
-			std::cerr << "Trying to unbind shader that isn't on GPU.";
-			assert(false);
+			std::cerr << "Trying to unbind shader that isn't on GPU.\n" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -235,7 +244,9 @@ auto Shader::getUniformIndex(const std::string_view& key) -> Expected<int32_t, s
 {
 	if constexpr (BuildSettings::mode != BuildSettings::Mode::release) {
 		if (!m_program_id) {
-			std::cerr << "Trying to find uniform of shader that doesn't have an program id.";
+			std::cerr 
+				<< "Trying to find uniform of shader that doesn't have an program id.\n" 
+				<< std::endl;
 			exit(EXIT_FAILURE);
 		}
 	}

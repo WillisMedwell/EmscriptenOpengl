@@ -201,7 +201,10 @@ auto Application::run() noexcept -> Expected<void, std::string_view>
             if (auto has_result = sscene.load("assets/scenes/entity_scene.json"); has_result.HasError()) {
                 sscene.loadIntoScene(scene_ptr);
             } else {
-                std::cerr << has_result.Error();
+                std::cerr 
+                    << has_result.Error() 
+                    << '\n' 
+                    << std::endl;
                 assert(false);
                 exit(EXIT_FAILURE);
             }
