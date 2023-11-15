@@ -71,14 +71,15 @@ void Shader::uploadToGpu() noexcept
     std::string vert_shader_source = readRawFile(m_vert_shader_path);
     std::string frag_shader_source = readRawFile(m_frag_shader_path);
 
-	constexpr size_t shader_version_insertion_index = 12;
 #if BUILD_TARGET == WEB_BUILD
-	constexpr auto shader_version = std::string_view{" es \n"};
+	const static auto shader_version = std::string{"#version 300 es \n"};
 #elif BUILD_TARGET == NATIVE_BUILD
-	constexpr auto shader_version = std::string_view{" core \n"};
+	const static auto shader_version = std::string{"#version 330 core \n"};
 #endif
-	vert_shader_source.insert_range(vert_shader_source.begin() + shader_version_insertion_index, shader_version);
-	frag_shader_source.insert_range(frag_shader_source.begin() + shader_version_insertion_index, shader_version);
+	const static auto to_replace = std::string{"#version 300"};
+
+	vert_shader_source.replace(0, to_replace.length(), shader_version);
+	frag_shader_source.replace(0, to_replace.length(), shader_version);
 
     m_program_id = glCreateProgram();
 
