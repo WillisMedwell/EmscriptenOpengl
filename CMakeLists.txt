@@ -56,13 +56,6 @@ elseif(DEFINED EMSCRIPTEN)
         set(PRELOAD_FILES "${PRELOAD_FILES} --preload-file ${REL_FILE}")
     endforeach()
 
-    set(PRELOAD_FILES "${PRELOAD_FILES} --preload-file ${CMAKE_SOURCE_DIR}/assets/objects/cube.obj")
-    set(PRELOAD_FILES "${PRELOAD_FILES} --preload-file ${CMAKE_SOURCE_DIR}/assets/objects/cross.obj")
-    set(PRELOAD_FILES "${PRELOAD_FILES} --preload-file ${CMAKE_SOURCE_DIR}/assets/objects/floor.obj")
-    set(PRELOAD_FILES "${PRELOAD_FILES} --preload-file ${CMAKE_SOURCE_DIR}/assets/objects/bullet.obj")
-    set(PRELOAD_FILES "${PRELOAD_FILES} --preload-file ${CMAKE_SOURCE_DIR}/assets/objects/sphere.obj")
-    set(PRELOAD_FILES "${PRELOAD_FILES} --preload-file ${CMAKE_SOURCE_DIR}/assets/objects/textured_cube.obj")
-
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${PRELOAD_FILES}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -s ASSERTIONS=2 -s SAFE_HEAP=1 -s STACK_OVERFLOW_CHECK=1 -s NO_EXIT_RUNTIME=0")
 
