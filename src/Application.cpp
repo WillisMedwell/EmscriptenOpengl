@@ -232,10 +232,6 @@ auto Application::run() noexcept -> Expected<void, std::string_view>
         size = 0;
 
         auto elapsed_reload = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - current_time).count();
-        // std::cout << "Frame Time " << elapsed_reload / 1000.0f << "ms\n";
-
-        // std::cout << "pos: " <<m_scene.camera.camera_pos.x << "," << m_scene.camera.camera_pos.y << "," << m_scene.camera.camera_pos.z << "\n";
-        // std::cout << "dir: " << m_scene.camera.camera_dir.x << "," << m_scene.camera.camera_dir.y << "," << m_scene.camera.camera_dir.z << "\n";
     };
 
 #if BUILD_TARGET == NATIVE_BUILD

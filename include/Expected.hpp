@@ -106,6 +106,14 @@ public:
         }
         return *this;
     }
+        template <typename Pred>
+    auto OnValue(Pred pred) noexcept -> Expected&
+    {
+        if (HasValue()) {
+            pred();
+        }
+        return *this;
+    }
 
     [[nodiscard]] auto Error() -> ErrorType&
     {

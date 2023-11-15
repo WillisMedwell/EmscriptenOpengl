@@ -1,36 +1,29 @@
-#include <iostream>
-#include <glm/glm.hpp>
 #include <array>
+#include <glm/glm.hpp>
+#include <iostream>
+
 
 #include "Application.hpp"
 
+#include "Loader.hpp"
 #include "renderer/3d/Scene.hpp"
 #include <glaze/glaze.hpp>
-#include "Loader.hpp"
 
-auto printAndQuit = [](auto msg) -> Expected<void, std::string_view>
-	{
-		std::cerr << msg;
-		exit(EXIT_FAILURE);
-		return {};
-	};
+
+auto printAndQuit = [](auto msg) -> Expected<void, std::string_view> {
+    std::cerr << msg;
+    exit(EXIT_FAILURE);
+    return {};
+};
 
 #include "Ecs.hpp"
 int main()
 {
-	SerialisedScene ss;
+    Application app;
 
-	ss.entities.emplace_back();
-	ss.entities.emplace_back();
+    app.init().OnError(printAndQuit).OnValue([]() { std::cout << "Done init.\n"; });
+    app.run().OnError(printAndQuit).OnValue([]() { std::cout << "Done running.\n"; });
+    app.stop();
 
-	std::cout << glz::write_json(ss) << std::endl;
-
-
-	Application app;
-
-	app.init().OnError(printAndQuit);
-	app.run().OnError(printAndQuit);
-	app.stop();
-
-	return 0;
+    return 0;
 }
