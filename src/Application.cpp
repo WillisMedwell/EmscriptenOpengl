@@ -85,8 +85,6 @@ auto Application::run() noexcept -> Expected<void, std::string_view>
     DepthFrameBuffer depth_fb;
     DepthFrameBuffer light_depth_fb;
 
-
-
     main_context_ptr = &m_main_context;
 
     offscreen_fb_ptr = &offscreen_fb;
@@ -94,24 +92,28 @@ auto Application::run() noexcept -> Expected<void, std::string_view>
     post_process_other_fb_ptr = &post_process_other_fb;
     depth_fb_ptr = &depth_fb;
     light_depth_fb_ptr = &light_depth_fb;
-	scene_ptr = &m_scene;
-	renderer_ptr = &m_renderer;
-	input_ptr = &m_input;
+    scene_ptr = &m_scene;
+    renderer_ptr = &m_renderer;
+    input_ptr = &m_input;
 
     auto render = []() {
-    	static bool has_bloom_post_processing = false;
-    	static bool has_other_post_processing = false;
+        static bool has_bloom_post_processing = false;
+        static bool has_other_post_processing = false;
+        static bool render_depth = false;
 
         auto current_time = std::chrono::high_resolution_clock::now();
         std::chrono::duration<float> elapsed_seconds = current_time - last_time;
         float dt = elapsed_seconds.count();
         last_time = current_time;
 
-        // auto [width, height] = main_context_ptr->getScreenDimensions();
-        // width = (width == 0) ? 1 : width;
-        // height = (height == 0) ? 1 : height;
+#if BUILD_TARGET == WEB_BUILD
         float width = 800;
         float height = 800;
+#elif BUILD_TARGET == NATIVE_BUILD
+        auto [width, height] = main_context_ptr->getScreenDimensions();
+        width = (width == 0) ? 1 : width;
+        height = (height == 0) ? 1 : height;
+#endif
 
         if (last_width != width || last_height != height) {
             last_width = width;
@@ -163,14 +165,15 @@ auto Application::run() noexcept -> Expected<void, std::string_view>
             ScreenFrameBuffer::bind();
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-            if (has_other_post_processing) {
+            if (render_depth) {
+                ScreenFrameBuffer::draw(*depth_fb_ptr);
+            } else if (has_other_post_processing) {
                 ScreenFrameBuffer::draw(*post_process_other_fb_ptr);
             } else if (has_bloom_post_processing) {
                 ScreenFrameBuffer::draw(*post_process_bloom_fb_ptr);
             } else {
                 ScreenFrameBuffer::draw(*offscreen_fb_ptr);
             }
-            // ScreenFrameBuffer::draw(depth_fb);
 
             main_context_ptr->swapBuffers();
         }
@@ -185,7 +188,9 @@ auto Application::run() noexcept -> Expected<void, std::string_view>
             scene_ptr->init(scenes[0]);
         } else if (input_ptr->isKeyDown('2')) {
             std::cout << "2\n";
+#if BUILD_TARGET == NATIVE_BUILD
             scene_ptr->init(scenes[1]);
+#endif
         } else if (input_ptr->isKeyDown('3')) {
             std::cout << "3\n";
             scene_ptr->init(scenes[2]);
@@ -199,17 +204,24 @@ auto Application::run() noexcept -> Expected<void, std::string_view>
             std::cout << "6\n";
             scene_ptr->init(scenes[5]);
         } else if (input_ptr->isKeyDown('7')) {
-            SerialisedScene sscene;
-            if (auto has_result = sscene.load("assets/scenes/entity_scene.json"); has_result.HasError()) {
-                sscene.loadIntoScene(scene_ptr);
-            } else {
-                std::cerr 
-                    << has_result.Error() 
-                    << '\n' 
-                    << std::endl;
-                assert(false);
-                exit(EXIT_FAILURE);
+            // SerialisedScene sscene;
+            // if (auto has_result = sscene.load("assets/scenes/entity_scene.json"); has_result.HasError()) {
+            //     sscene.loadIntoScene(scene_ptr);
+            // } else {
+            //     std::cerr
+            //         << has_result.Error()
+            //         << '\n'
+            //         << std::endl;
+            //     assert(false);
+            //     exit(EXIT_FAILURE);
+            // }
+            static auto p_timer = std::chrono::high_resolution_clock::now();
+            auto current_time = std::chrono::high_resolution_clock::now();
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time - p_timer).count() > 200) {
+                render_depth = !(render_depth);
+                p_timer = current_time;
             }
+
         } else if (input_ptr->isKeyDown('R')) {
             auto start_time_reload = std::chrono::high_resolution_clock::now();
             scene_ptr->reload();
