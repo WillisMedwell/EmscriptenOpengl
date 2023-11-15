@@ -260,7 +260,7 @@ inline void DepthFrameBuffer::init(uint32_t width, uint32_t height)
 		m_depth_attachment = 0;
 		glGenTextures(1, &m_depth_attachment.value());
 		glBindTexture(GL_TEXTURE_2D, m_depth_attachment.value());
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
 		// Set texture parameters here (e.g., GL_LINEAR, GL_CLAMP_TO_EDGE)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
