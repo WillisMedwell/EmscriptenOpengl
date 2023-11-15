@@ -107,9 +107,11 @@ auto Application::run() noexcept -> Expected<void, std::string_view>
         float dt = elapsed_seconds.count();
         last_time = current_time;
 
-        auto [width, height] = main_context_ptr->getScreenDimensions();
-        width = (width == 0) ? 1 : width;
-        height = (height == 0) ? 1 : height;
+        // auto [width, height] = main_context_ptr->getScreenDimensions();
+        // width = (width == 0) ? 1 : width;
+        // height = (height == 0) ? 1 : height;
+        float width = 800;
+        float height = 800;
 
         if (last_width != width || last_height != height) {
             last_width = width;
