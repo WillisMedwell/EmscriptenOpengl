@@ -45,10 +45,14 @@ elseif(DEFINED EMSCRIPTEN)
     add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS})
     target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -fexperimental-library)
 
+    file(GLOB_RECURSE ASSETS "assets/*.png" "assets/*.obj" "assets/*.json" "assets/*.glsl")
+    
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_WEBGL2=1 -s USE_GLFW=3 -s FULL_ES3=1")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_RUNTIME_METHODS='[\"callMain\"]' -s DEMANGLE_SUPPORT=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file ${ASSETS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -s ASSERTIONS=2 -s SAFE_HEAP=1 -s STACK_OVERFLOW_CHECK=1 -s NO_EXIT_RUNTIME=0")
+
     set(CMAKE_EXECUTABLE_SUFFIX ".js")
 
     target_include_directories(
