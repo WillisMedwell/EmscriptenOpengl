@@ -4189,6 +4189,72 @@ function ___syscall_fstat64(fd, buf) {
  }
 }
 
+function ___syscall_getcwd(buf, size) {
+ try {
+  if (size === 0) return -28;
+  var cwd = FS.cwd();
+  var cwdLengthInBytes = lengthBytesUTF8(cwd) + 1;
+  if (size < cwdLengthInBytes) return -68;
+  stringToUTF8(cwd, buf, size);
+  return cwdLengthInBytes;
+ } catch (e) {
+  if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+  return -e.errno;
+ }
+}
+
+function ___syscall_getdents64(fd, dirp, count) {
+ try {
+  var stream = SYSCALLS.getStreamFromFD(fd);
+  if (!stream.getdents) {
+   stream.getdents = FS.readdir(stream.path);
+  }
+  var struct_size = 280;
+  var pos = 0;
+  var off = FS.llseek(stream, 0, 1);
+  var idx = Math.floor(off / struct_size);
+  while (idx < stream.getdents.length && pos + struct_size <= count) {
+   var id;
+   var type;
+   var name = stream.getdents[idx];
+   if (name === ".") {
+    id = stream.node.id;
+    type = 4;
+   } else if (name === "..") {
+    var lookup = FS.lookupPath(stream.path, {
+     parent: true
+    });
+    id = lookup.node.id;
+    type = 4;
+   } else {
+    var child = FS.lookupNode(stream.node, name);
+    id = child.id;
+    type = FS.isChrdev(child.mode) ? 2 :  FS.isDir(child.mode) ? 4 :  FS.isLink(child.mode) ? 10 :  8;
+   }
+   assert(id);
+   (tempI64 = [ id >>> 0, (tempDouble = id, (+(Math.abs(tempDouble))) >= 1 ? (tempDouble > 0 ? (+(Math.floor((tempDouble) / 4294967296))) >>> 0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble))) >>> 0)) / 4294967296))))) >>> 0) : 0) ], 
+   SAFE_HEAP_STORE(((dirp + pos) >> 2) * 4, tempI64[0], 4), SAFE_HEAP_STORE((((dirp + pos) + (4)) >> 2) * 4, tempI64[1], 4));
+   checkInt64(id);
+   (tempI64 = [ (idx + 1) * struct_size >>> 0, (tempDouble = (idx + 1) * struct_size, 
+   (+(Math.abs(tempDouble))) >= 1 ? (tempDouble > 0 ? (+(Math.floor((tempDouble) / 4294967296))) >>> 0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble))) >>> 0)) / 4294967296))))) >>> 0) : 0) ], 
+   SAFE_HEAP_STORE((((dirp + pos) + (8)) >> 2) * 4, tempI64[0], 4), SAFE_HEAP_STORE((((dirp + pos) + (12)) >> 2) * 4, tempI64[1], 4));
+   checkInt64((idx + 1) * struct_size);
+   SAFE_HEAP_STORE((((dirp + pos) + (16)) >> 1) * 2, 280, 2);
+   checkInt16(280);
+   SAFE_HEAP_STORE((((dirp + pos) + (18)) >> 0), type, 1);
+   checkInt8(type);
+   stringToUTF8(name, dirp + pos + 19, 256);
+   pos += struct_size;
+   idx += 1;
+  }
+  FS.llseek(stream, idx * struct_size, 0);
+  return pos;
+ } catch (e) {
+  if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+  return -e.errno;
+ }
+}
+
 function ___syscall_ioctl(fd, op, varargs) {
  SYSCALLS.varargs = varargs;
  try {
@@ -7588,6 +7654,8 @@ var wasmImports = {
  /** @export */ __cxa_throw: ___cxa_throw,
  /** @export */ __syscall_fcntl64: ___syscall_fcntl64,
  /** @export */ __syscall_fstat64: ___syscall_fstat64,
+ /** @export */ __syscall_getcwd: ___syscall_getcwd,
+ /** @export */ __syscall_getdents64: ___syscall_getdents64,
  /** @export */ __syscall_ioctl: ___syscall_ioctl,
  /** @export */ __syscall_lstat64: ___syscall_lstat64,
  /** @export */ __syscall_newfstatat: ___syscall_newfstatat,
