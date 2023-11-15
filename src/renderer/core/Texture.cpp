@@ -32,9 +32,7 @@ void Texture::uploadToGpu() noexcept
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, m_image.value().width, m_image.value().height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (const void*)m_image.value().data.data());
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image.value().width, m_image.value().height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (const void*)m_image.value().data.data());
 	}
 	else {
 		offloadFromGpu();

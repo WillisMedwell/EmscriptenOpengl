@@ -27,7 +27,8 @@ constexpr auto scenes = std::to_array({ std::string_view { "assets/scenes/basic.
 	std::string_view { "assets/scenes/normals.json" },
 	std::string_view { "assets/scenes/phong.json" },
 	std::string_view { "assets/scenes/gooch.json" },
-	std::string_view { "assets/scenes/texture.json" } });
+	std::string_view { "assets/scenes/texture.json" } }
+);
 
 auto Application::init() noexcept -> Expected<void, std::string_view>
 {
@@ -159,21 +160,27 @@ auto Application::run() noexcept -> Expected<void, std::string_view>
 		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end_time - current_time).count();
 
 		if (m_input.isKeyDown('1')) {
+			std::cout << "1\n";
 			m_scene.init(scenes[0]);
 		}
 		else if (m_input.isKeyDown('2')) {
+			std::cout << "2\n";
 			m_scene.init(scenes[1]);
 		}
 		else if (m_input.isKeyDown('3')) {
+			std::cout << "3\n";
 			m_scene.init(scenes[2]);
 		}
 		else if (m_input.isKeyDown('4')) {
+			std::cout << "4\n";
 			m_scene.init(scenes[3]);
 		}
 		else if (m_input.isKeyDown('5')) {
+			std::cout << "5\n";
 			m_scene.init(scenes[4]);
 		}
 		else if (m_input.isKeyDown('6')) {
+			std::cout << "6\n";
 			m_scene.init(scenes[5]);
 		}
 		else if (m_input.isKeyDown('7')) {
