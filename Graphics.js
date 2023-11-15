@@ -176,119 +176,147 @@ Module.expectedDataFileDownloads++;
    "start": 236557,
    "end": 286638
   }, {
-   "filename": "/assets/objects/cube_texture.png",
+   "filename": "/assets/objects/bullet.obj",
    "start": 286638,
-   "end": 428431
+   "end": 503829
+  }, {
+   "filename": "/assets/objects/cross.obj",
+   "start": 503829,
+   "end": 505375
+  }, {
+   "filename": "/assets/objects/cube.obj",
+   "start": 505375,
+   "end": 506584
+  }, {
+   "filename": "/assets/objects/cube_texture.png",
+   "start": 506584,
+   "end": 648377
+  }, {
+   "filename": "/assets/objects/floor.obj",
+   "start": 648377,
+   "end": 648725
   }, {
    "filename": "/assets/objects/floor_texture.png",
-   "start": 428431,
-   "end": 2070276
+   "start": 648725,
+   "end": 2290570
+  }, {
+   "filename": "/assets/objects/sphere.obj",
+   "start": 2290570,
+   "end": 3673875
+  }, {
+   "filename": "/assets/objects/textured_cube.obj",
+   "start": 3673875,
+   "end": 3675088
+  }, {
+   "filename": "/assets/objects/trail.obj",
+   "start": 3675088,
+   "end": 3812708
   }, {
    "filename": "/assets/scenes/basic.json",
-   "start": 2070276,
-   "end": 2072078
+   "start": 3812708,
+   "end": 3814510
   }, {
    "filename": "/assets/scenes/entity_scene.json",
-   "start": 2072078,
-   "end": 2072422
+   "start": 3814510,
+   "end": 3814854
   }, {
    "filename": "/assets/scenes/gooch.json",
-   "start": 2072422,
-   "end": 2074734
+   "start": 3814854,
+   "end": 3817166
   }, {
    "filename": "/assets/scenes/normals.json",
-   "start": 2074734,
-   "end": 2076538
+   "start": 3817166,
+   "end": 3818970
   }, {
    "filename": "/assets/scenes/phong.json",
-   "start": 2076538,
-   "end": 2079803
+   "start": 3818970,
+   "end": 3822235
   }, {
    "filename": "/assets/scenes/texture.json",
-   "start": 2079803,
-   "end": 2083218
+   "start": 3822235,
+   "end": 3825650
   }, {
    "filename": "/assets/scenes/wireframe.json",
-   "start": 2083218,
-   "end": 2084996
+   "start": 3825650,
+   "end": 3827428
   }, {
    "filename": "/assets/shaders/basic.frag.glsl",
-   "start": 2084996,
-   "end": 2085078
+   "start": 3827428,
+   "end": 3827510
   }, {
    "filename": "/assets/shaders/basic.vert.glsl",
-   "start": 2085078,
-   "end": 2085418
+   "start": 3827510,
+   "end": 3827850
   }, {
    "filename": "/assets/shaders/bloom.frag.glsl",
-   "start": 2085418,
-   "end": 2086596
+   "start": 3827850,
+   "end": 3829028
   }, {
    "filename": "/assets/shaders/gooch.frag.glsl",
-   "start": 2086596,
-   "end": 2088160
+   "start": 3829028,
+   "end": 3830592
   }, {
    "filename": "/assets/shaders/gooch.vert.glsl",
-   "start": 2088160,
-   "end": 2088999
+   "start": 3830592,
+   "end": 3831431
   }, {
    "filename": "/assets/shaders/normals.frag.glsl",
-   "start": 2088999,
-   "end": 2089162
+   "start": 3831431,
+   "end": 3831594
   }, {
    "filename": "/assets/shaders/normals.vert.glsl",
-   "start": 2089162,
-   "end": 2089588
+   "start": 3831594,
+   "end": 3832020
   }, {
    "filename": "/assets/shaders/phong.frag.glsl",
-   "start": 2089588,
-   "end": 2091290
+   "start": 3832020,
+   "end": 3833722
   }, {
    "filename": "/assets/shaders/phong.vert.glsl",
-   "start": 2091290,
-   "end": 2092135
+   "start": 3833722,
+   "end": 3834567
   }, {
    "filename": "/assets/shaders/post_process_mix.frag.glsl",
-   "start": 2092135,
-   "end": 2093697
+   "start": 3834567,
+   "end": 3836129
   }, {
    "filename": "/assets/shaders/screen.vert.glsl",
-   "start": 2093697,
-   "end": 2093915
+   "start": 3836129,
+   "end": 3836347
   }, {
    "filename": "/assets/shaders/screen_basic.frag.glsl",
-   "start": 2093915,
-   "end": 2097011
+   "start": 3836347,
+   "end": 3839443
   }, {
    "filename": "/assets/shaders/screen_depth.frag.glsl",
-   "start": 2097011,
-   "end": 2097675
+   "start": 3839443,
+   "end": 3840107
   }, {
    "filename": "/assets/shaders/texture.frag.glsl",
-   "start": 2097675,
-   "end": 2097874
+   "start": 3840107,
+   "end": 3840306
   }, {
    "filename": "/assets/shaders/texture.vert.glsl",
-   "start": 2097874,
-   "end": 2098246
+   "start": 3840306,
+   "end": 3840678
   }, {
    "filename": "/assets/shaders/white.frag.glsl",
-   "start": 2098246,
-   "end": 2098325
+   "start": 3840678,
+   "end": 3840757
   }, {
    "filename": "/assets/shaders/wireframe.frag.glsl",
-   "start": 2098325,
-   "end": 2098439
+   "start": 3840757,
+   "end": 3840871
   }, {
    "filename": "/assets/shaders/wireframe.geo.glsl",
-   "start": 2098439,
-   "end": 2098986
+   "start": 3840871,
+   "end": 3841418
   }, {
    "filename": "/assets/shaders/wireframe.vert.glsl",
-   "start": 2098986,
-   "end": 2099318
+   "start": 3841418,
+   "end": 3841750
   } ],
-  "remote_package_size": 2099318
+  "remote_package_size": 3841750
  });
 })();
 
