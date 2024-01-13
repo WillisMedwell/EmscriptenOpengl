@@ -849,9 +849,7 @@ function getUniqueRunDependency(id) {
 
 function addRunDependency(id) {
  runDependencies++;
- if (Module["monitorRunDependencies"]) {
-  Module["monitorRunDependencies"](runDependencies);
- }
+ Module["monitorRunDependencies"]?.(runDependencies);
  if (id) {
   assert(!runDependencyTracking[id]);
   runDependencyTracking[id] = 1;
@@ -882,9 +880,7 @@ function addRunDependency(id) {
 
 function removeRunDependency(id) {
  runDependencies--;
- if (Module["monitorRunDependencies"]) {
-  Module["monitorRunDependencies"](runDependencies);
- }
+ Module["monitorRunDependencies"]?.(runDependencies);
  if (id) {
   assert(runDependencyTracking[id]);
   delete runDependencyTracking[id];
@@ -905,9 +901,7 @@ function removeRunDependency(id) {
 }
 
 /** @param {string|number=} what */ function abort(what) {
- if (Module["onAbort"]) {
-  Module["onAbort"](what);
- }
+ Module["onAbort"]?.(what);
  what = "Aborted(" + what + ")";
  err(what);
  ABORT = true;
@@ -1531,7 +1525,7 @@ var unSign = (value, bits) => {
 };
 
 var warnOnce = text => {
- if (!warnOnce.shown) warnOnce.shown = {};
+ warnOnce.shown ||= {};
  if (!warnOnce.shown[text]) {
   warnOnce.shown[text] = 1;
   if (ENVIRONMENT_IS_NODE) text = "warning: " + text;
@@ -1936,55 +1930,53 @@ var MEMFS = {
   if (FS.isBlkdev(mode) || FS.isFIFO(mode)) {
    throw new FS.ErrnoError(63);
   }
-  if (!MEMFS.ops_table) {
-   MEMFS.ops_table = {
-    dir: {
-     node: {
-      getattr: MEMFS.node_ops.getattr,
-      setattr: MEMFS.node_ops.setattr,
-      lookup: MEMFS.node_ops.lookup,
-      mknod: MEMFS.node_ops.mknod,
-      rename: MEMFS.node_ops.rename,
-      unlink: MEMFS.node_ops.unlink,
-      rmdir: MEMFS.node_ops.rmdir,
-      readdir: MEMFS.node_ops.readdir,
-      symlink: MEMFS.node_ops.symlink
-     },
-     stream: {
-      llseek: MEMFS.stream_ops.llseek
-     }
+  MEMFS.ops_table ||= {
+   dir: {
+    node: {
+     getattr: MEMFS.node_ops.getattr,
+     setattr: MEMFS.node_ops.setattr,
+     lookup: MEMFS.node_ops.lookup,
+     mknod: MEMFS.node_ops.mknod,
+     rename: MEMFS.node_ops.rename,
+     unlink: MEMFS.node_ops.unlink,
+     rmdir: MEMFS.node_ops.rmdir,
+     readdir: MEMFS.node_ops.readdir,
+     symlink: MEMFS.node_ops.symlink
     },
-    file: {
-     node: {
-      getattr: MEMFS.node_ops.getattr,
-      setattr: MEMFS.node_ops.setattr
-     },
-     stream: {
-      llseek: MEMFS.stream_ops.llseek,
-      read: MEMFS.stream_ops.read,
-      write: MEMFS.stream_ops.write,
-      allocate: MEMFS.stream_ops.allocate,
-      mmap: MEMFS.stream_ops.mmap,
-      msync: MEMFS.stream_ops.msync
-     }
-    },
-    link: {
-     node: {
-      getattr: MEMFS.node_ops.getattr,
-      setattr: MEMFS.node_ops.setattr,
-      readlink: MEMFS.node_ops.readlink
-     },
-     stream: {}
-    },
-    chrdev: {
-     node: {
-      getattr: MEMFS.node_ops.getattr,
-      setattr: MEMFS.node_ops.setattr
-     },
-     stream: FS.chrdev_stream_ops
+    stream: {
+     llseek: MEMFS.stream_ops.llseek
     }
-   };
-  }
+   },
+   file: {
+    node: {
+     getattr: MEMFS.node_ops.getattr,
+     setattr: MEMFS.node_ops.setattr
+    },
+    stream: {
+     llseek: MEMFS.stream_ops.llseek,
+     read: MEMFS.stream_ops.read,
+     write: MEMFS.stream_ops.write,
+     allocate: MEMFS.stream_ops.allocate,
+     mmap: MEMFS.stream_ops.mmap,
+     msync: MEMFS.stream_ops.msync
+    }
+   },
+   link: {
+    node: {
+     getattr: MEMFS.node_ops.getattr,
+     setattr: MEMFS.node_ops.setattr,
+     readlink: MEMFS.node_ops.readlink
+    },
+    stream: {}
+   },
+   chrdev: {
+    node: {
+     getattr: MEMFS.node_ops.getattr,
+     setattr: MEMFS.node_ops.setattr
+    },
+    stream: FS.chrdev_stream_ops
+   }
+  };
   var node = FS.createNode(parent, name, mode, dev);
   if (FS.isDir(node.mode)) {
    node.node_ops = MEMFS.ops_table.dir.node;
@@ -2114,10 +2106,7 @@ var MEMFS = {
   },
   readdir(node) {
    var entries = [ ".", ".." ];
-   for (var key in node.contents) {
-    if (!node.contents.hasOwnProperty(key)) {
-     continue;
-    }
+   for (var key of Object.keys(node.contents)) {
     entries.push(key);
    }
    return entries;
@@ -2273,15 +2262,15 @@ var FS_createPreloadedFile = (parent, name, url, canRead, canWrite, onload, oner
  var dep = getUniqueRunDependency(`cp ${fullname}`);
  function processData(byteArray) {
   function finish(byteArray) {
-   if (preFinish) preFinish();
+   preFinish?.();
    if (!dontCreateFile) {
     FS_createDataFile(parent, name, byteArray, canRead, canWrite, canOwn);
    }
-   if (onload) onload();
+   onload?.();
    removeRunDependency(dep);
   }
   if (FS_handledByPreloadPlugin(byteArray, fullname, finish, () => {
-   if (onerror) onerror();
+   onerror?.();
    removeRunDependency(dep);
   })) {
    return;
@@ -2868,9 +2857,7 @@ var FS = {
   open(stream) {
    var device = FS.getDevice(stream.node.rdev);
    stream.stream_ops = device.stream_ops;
-   if (stream.stream_ops.open) {
-    stream.stream_ops.open(stream);
-   }
+   stream.stream_ops.open?.(stream);
   },
   llseek() {
    throw new FS.ErrnoError(70);
@@ -3807,7 +3794,7 @@ var FS = {
     stream.seekable = false;
    },
    close(stream) {
-    if (output && output.buffer && output.buffer.length) {
+    if (output?.buffer?.length) {
      output(10);
     }
    },
@@ -4234,9 +4221,7 @@ function ___syscall_getcwd(buf, size) {
 function ___syscall_getdents64(fd, dirp, count) {
  try {
   var stream = SYSCALLS.getStreamFromFD(fd);
-  if (!stream.getdents) {
-   stream.getdents = FS.readdir(stream.path);
-  }
+  stream.getdents ||= FS.readdir(stream.path);
   var struct_size = 280;
   var pos = 0;
   var off = FS.llseek(stream, 0, 1);
@@ -4503,7 +4488,7 @@ var keepRuntimeAlive = () => noExitRuntime || runtimeKeepaliveCounter > 0;
 var _proc_exit = code => {
  EXITSTATUS = code;
  if (!keepRuntimeAlive()) {
-  if (Module["onExit"]) Module["onExit"](code);
+  Module["onExit"]?.(code);
   ABORT = true;
  }
  quit_(code, new ExitStatus(code));
@@ -4617,7 +4602,7 @@ var Browser = {
     }
    }
    callUserCallback(func);
-   if (Module["postMainLoop"]) Module["postMainLoop"]();
+   Module["postMainLoop"]?.();
   }
  },
  isFullscreen: false,
@@ -4652,11 +4637,11 @@ var Browser = {
     ctx.drawImage(img, 0, 0);
     preloadedImages[name] = canvas;
     URL.revokeObjectURL(url);
-    if (onload) onload(byteArray);
+    onload?.(byteArray);
    };
    img.onerror = event => {
     err(`Image ${url} could not be decoded`);
-    if (onerror) onerror();
+    onerror?.();
    };
    img.src = url;
   };
@@ -4675,13 +4660,13 @@ var Browser = {
     if (done) return;
     done = true;
     preloadedAudios[name] = audio;
-    if (onload) onload(byteArray);
+    onload?.(byteArray);
    }
    function fail() {
     if (done) return;
     done = true;
     preloadedAudios[name] = new Audio;
-    if (onerror) onerror();
+    onerror?.();
    }
    var b = new Blob([ byteArray ], {
     type: Browser.getMimetype(name)
@@ -4814,8 +4799,8 @@ var Browser = {
      Browser.updateCanvasDimensions(canvas);
     }
    }
-   if (Module["onFullScreen"]) Module["onFullScreen"](Browser.isFullscreen);
-   if (Module["onFullscreen"]) Module["onFullscreen"](Browser.isFullscreen);
+   Module["onFullScreen"]?.(Browser.isFullscreen);
+   Module["onFullscreen"]?.(Browser.isFullscreen);
   }
   if (!Browser.fullscreenHandlersInstalled) {
    Browser.fullscreenHandlersInstalled = true;
@@ -4884,9 +4869,7 @@ var Browser = {
   }[name.substr(name.lastIndexOf(".") + 1)];
  },
  getUserMedia(func) {
-  if (!window.getUserMedia) {
-   window.getUserMedia = navigator["getUserMedia"] || navigator["mozGetUserMedia"];
-  }
+  window.getUserMedia ||= navigator["getUserMedia"] || navigator["mozGetUserMedia"];
   window.getUserMedia(func);
  },
  getMovementX(event) {
@@ -4937,6 +4920,29 @@ var Browser = {
  mouseMovementY: 0,
  touches: {},
  lastTouches: {},
+ calculateMouseCoords(pageX, pageY) {
+  var rect = Module["canvas"].getBoundingClientRect();
+  var cw = Module["canvas"].width;
+  var ch = Module["canvas"].height;
+  var scrollX = ((typeof window.scrollX != "undefined") ? window.scrollX : window.pageXOffset);
+  var scrollY = ((typeof window.scrollY != "undefined") ? window.scrollY : window.pageYOffset);
+  assert((typeof scrollX != "undefined") && (typeof scrollY != "undefined"), "Unable to retrieve scroll position, mouse positions likely broken.");
+  var adjustedX = pageX - (scrollX + rect.left);
+  var adjustedY = pageY - (scrollY + rect.top);
+  adjustedX = adjustedX * (cw / rect.width);
+  adjustedY = adjustedY * (ch / rect.height);
+  return {
+   x: adjustedX,
+   y: adjustedY
+  };
+ },
+ setMouseCoords(pageX, pageY) {
+  const {x: x, y: y} = Browser.calculateMouseCoords(pageX, pageY);
+  Browser.mouseMovementX = x - Browser.mouseX;
+  Browser.mouseMovementY = y - Browser.mouseY;
+  Browser.mouseX = x;
+  Browser.mouseY = y;
+ },
  calculateMouseEvent(event) {
   if (Browser.pointerLock) {
    if (event.type != "mousemove" && ("mozMovementX" in event)) {
@@ -4953,44 +4959,24 @@ var Browser = {
     Browser.mouseY += Browser.mouseMovementY;
    }
   } else {
-   var rect = Module["canvas"].getBoundingClientRect();
-   var cw = Module["canvas"].width;
-   var ch = Module["canvas"].height;
-   var scrollX = ((typeof window.scrollX != "undefined") ? window.scrollX : window.pageXOffset);
-   var scrollY = ((typeof window.scrollY != "undefined") ? window.scrollY : window.pageYOffset);
-   assert((typeof scrollX != "undefined") && (typeof scrollY != "undefined"), "Unable to retrieve scroll position, mouse positions likely broken.");
    if (event.type === "touchstart" || event.type === "touchend" || event.type === "touchmove") {
     var touch = event.touch;
     if (touch === undefined) {
      return;
     }
-    var adjustedX = touch.pageX - (scrollX + rect.left);
-    var adjustedY = touch.pageY - (scrollY + rect.top);
-    adjustedX = adjustedX * (cw / rect.width);
-    adjustedY = adjustedY * (ch / rect.height);
-    var coords = {
-     x: adjustedX,
-     y: adjustedY
-    };
+    var coords = Browser.calculateMouseCoords(touch.pageX, touch.pageY);
     if (event.type === "touchstart") {
      Browser.lastTouches[touch.identifier] = coords;
      Browser.touches[touch.identifier] = coords;
     } else if (event.type === "touchend" || event.type === "touchmove") {
      var last = Browser.touches[touch.identifier];
-     if (!last) last = coords;
+     last ||= coords;
      Browser.lastTouches[touch.identifier] = last;
      Browser.touches[touch.identifier] = coords;
     }
     return;
    }
-   var x = event.pageX - (scrollX + rect.left);
-   var y = event.pageY - (scrollY + rect.top);
-   x = x * (cw / rect.width);
-   y = y * (ch / rect.height);
-   Browser.mouseMovementX = x - Browser.mouseX;
-   Browser.mouseMovementY = y - Browser.mouseY;
-   Browser.mouseX = x;
-   Browser.mouseY = y;
+   Browser.setMouseCoords(event.pageX, event.pageY);
   }
  },
  resizeListeners: [],
@@ -5180,7 +5166,7 @@ var _emscripten_set_main_loop_timing = (mode, value) => {
   Browser.mainLoop.runIter(browserIterationFunc);
   checkStackCookie();
   if (!checkIsRunning()) return;
-  if (typeof SDL == "object" && SDL.audio && SDL.audio.queueNewAudioData) SDL.audio.queueNewAudioData();
+  if (typeof SDL == "object") SDL.audio?.queueNewAudioData?.();
   Browser.mainLoop.scheduler();
  };
  if (!noSetTiming) {
@@ -5612,7 +5598,7 @@ var GL = {
  },
  makeContextCurrent: contextHandle => {
   GL.currentContext = GL.contexts[contextHandle];
-  Module.ctx = GLctx = GL.currentContext && GL.currentContext.GLctx;
+  Module.ctx = GLctx = GL.currentContext?.GLctx;
   return !(contextHandle && !GLctx);
  },
  getContext: contextHandle => GL.contexts[contextHandle],
@@ -5629,7 +5615,7 @@ var GL = {
   GL.contexts[contextHandle] = null;
  },
  initExtensions: context => {
-  if (!context) context = GL.currentContext;
+  context ||= GL.currentContext;
   if (context.initExtensionsDone) return;
   context.initExtensionsDone = true;
   var GLctx = context.GLctx;
@@ -6214,7 +6200,7 @@ function _glViewport(x0, x1, x2, x3) {
  GLctx.viewport(x0, x1, x2, x3);
 }
 
-/** @constructor */ function GLFW_Window(id, width, height, title, monitor, share) {
+/** @constructor */ function GLFW_Window(id, width, height, framebufferWidth, framebufferHeight, title, monitor, share) {
  this.id = id;
  this.x = 0;
  this.y = 0;
@@ -6223,12 +6209,14 @@ function _glViewport(x0, x1, x2, x3) {
  this.storedY = 0;
  this.width = width;
  this.height = height;
+ this.framebufferWidth = framebufferWidth;
+ this.framebufferHeight = framebufferHeight;
  this.storedWidth = width;
  this.storedHeight = height;
  this.title = title;
  this.monitor = monitor;
  this.share = share;
- this.attributes = GLFW.hints;
+ this.attributes = Object.assign({}, GLFW.hints);
  this.inputModes = {
   208897: 212993,
   208898: 0,
@@ -6283,7 +6271,9 @@ var GLFW = {
  versionString: null,
  initialTime: null,
  extensions: null,
+ devicePixelRatioMQL: null,
  hints: null,
+ primaryTouchId: null,
  defaultHints: {
   131073: 0,
   131074: 0,
@@ -6716,7 +6706,22 @@ var GLFW = {
  },
  onMousemove: event => {
   if (!GLFW.active) return;
-  Browser.calculateMouseEvent(event);
+  if (event.type === "touchmove") {
+   event.preventDefault();
+   let primaryChanged = false;
+   for (let i of event.changedTouches) {
+    if (GLFW.primaryTouchId === i.identifier) {
+     Browser.setMouseCoords(i.pageX, i.pageY);
+     primaryChanged = true;
+     break;
+    }
+   }
+   if (!primaryChanged) {
+    return;
+   }
+  } else {
+   Browser.calculateMouseEvent(event);
+  }
   if (event.target != Module["canvas"] || !GLFW.active.cursorPosFunc) return;
   if (GLFW.active.cursorPosFunc) {
    getWasmTableEntry(GLFW.active.cursorPosFunc)(GLFW.active.id, Browser.mouseX, Browser.mouseY);
@@ -6749,9 +6754,33 @@ var GLFW = {
  },
  onMouseButtonChanged: (event, status) => {
   if (!GLFW.active) return;
-  Browser.calculateMouseEvent(event);
   if (event.target != Module["canvas"]) return;
-  var eventButton = GLFW.DOMToGLFWMouseButton(event);
+  const isTouchType = event.type === "touchstart" || event.type === "touchend" || event.type === "touchcancel";
+  let eventButton = 0;
+  if (isTouchType) {
+   event.preventDefault();
+   let primaryChanged = false;
+   if (GLFW.primaryTouchId === null && event.type === "touchstart" && event.targetTouches.length > 0) {
+    const chosenTouch = event.targetTouches[0];
+    GLFW.primaryTouchId = chosenTouch.identifier;
+    Browser.setMouseCoords(chosenTouch.pageX, chosenTouch.pageY);
+    primaryChanged = true;
+   } else if (event.type === "touchend" || event.type === "touchcancel") {
+    for (let i of event.changedTouches) {
+     if (GLFW.primaryTouchId === i.identifier) {
+      GLFW.primaryTouchId = null;
+      primaryChanged = true;
+      break;
+     }
+    }
+   }
+   if (!primaryChanged) {
+    return;
+   }
+  } else {
+   Browser.calculateMouseEvent(event);
+   eventButton = GLFW.DOMToGLFWMouseButton(event);
+  }
   if (status == 1) {
    GLFW.active.buttons |= (1 << eventButton);
    try {
@@ -6787,32 +6816,36 @@ var GLFW = {
   getWasmTableEntry(GLFW.active.scrollFunc)(GLFW.active.id, sx, sy);
   event.preventDefault();
  },
- onCanvasResize: (width, height) => {
+ onCanvasResize: (width, height, framebufferWidth, framebufferHeight) => {
   if (!GLFW.active) return;
-  var resizeNeeded = true;
+  var resizeNeeded = false;
   if (document["fullscreen"] || document["fullScreen"] || document["mozFullScreen"] || document["webkitIsFullScreen"]) {
-   GLFW.active.storedX = GLFW.active.x;
-   GLFW.active.storedY = GLFW.active.y;
-   GLFW.active.storedWidth = GLFW.active.width;
-   GLFW.active.storedHeight = GLFW.active.height;
-   GLFW.active.x = GLFW.active.y = 0;
-   GLFW.active.width = screen.width;
-   GLFW.active.height = screen.height;
-   GLFW.active.fullscreen = true;
+   if (!GLFW.active.fullscreen) {
+    resizeNeeded = width != screen.width || height != screen.height;
+    GLFW.active.storedX = GLFW.active.x;
+    GLFW.active.storedY = GLFW.active.y;
+    GLFW.active.storedWidth = GLFW.active.width;
+    GLFW.active.storedHeight = GLFW.active.height;
+    GLFW.active.x = GLFW.active.y = 0;
+    GLFW.active.width = screen.width;
+    GLFW.active.height = screen.height;
+    GLFW.active.fullscreen = true;
+   }
   } else  if (GLFW.active.fullscreen == true) {
+   resizeNeeded = width != GLFW.active.storedWidth || height != GLFW.active.storedHeight;
    GLFW.active.x = GLFW.active.storedX;
    GLFW.active.y = GLFW.active.storedY;
    GLFW.active.width = GLFW.active.storedWidth;
    GLFW.active.height = GLFW.active.storedHeight;
    GLFW.active.fullscreen = false;
-  } else  if (GLFW.active.width != width || GLFW.active.height != height) {
-   GLFW.active.width = width;
-   GLFW.active.height = height;
-  } else {
-   resizeNeeded = false;
   }
   if (resizeNeeded) {
-   Browser.setCanvasSize(GLFW.active.width, GLFW.active.height, true);
+   Browser.setCanvasSize(GLFW.active.width, GLFW.active.height);
+  } else if (GLFW.active.width != width || GLFW.active.height != height || GLFW.active.framebufferWidth != framebufferWidth || GLFW.active.framebufferHeight != framebufferHeight) {
+   GLFW.active.width = width;
+   GLFW.active.height = height;
+   GLFW.active.framebufferWidth = framebufferWidth;
+   GLFW.active.framebufferHeight = framebufferHeight;
    GLFW.onWindowSizeChanged();
    GLFW.onFramebufferSizeChanged();
   }
@@ -6826,7 +6859,7 @@ var GLFW = {
  onFramebufferSizeChanged: () => {
   if (!GLFW.active) return;
   if (GLFW.active.framebufferSizeFunc) {
-   getWasmTableEntry(GLFW.active.framebufferSizeFunc)(GLFW.active.id, GLFW.active.width, GLFW.active.height);
+   getWasmTableEntry(GLFW.active.framebufferSizeFunc)(GLFW.active.id, GLFW.active.framebufferWidth, GLFW.active.framebufferHeight);
   }
  },
  onWindowContentScaleChanged: scale => {
@@ -6856,7 +6889,7 @@ var GLFW = {
  lastGamepadStateFrame: null,
  refreshJoysticks: () => {
   if (Browser.mainLoop.currentFrameNumber !== GLFW.lastGamepadStateFrame || !Browser.mainLoop.currentFrameNumber) {
-   GLFW.lastGamepadState = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+   GLFW.lastGamepadState = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads || []);
    GLFW.lastGamepadStateFrame = Browser.mainLoop.currentFrameNumber;
    for (var joy = 0; joy < GLFW.lastGamepadState.length; ++joy) {
     var gamepad = GLFW.lastGamepadState[joy];
@@ -7146,12 +7179,10 @@ var GLFW = {
   if (!win) return;
   if (GLFW.active.id == win.id) {
    Browser.setCanvasSize(width, height);
-   win.width = width;
-   win.height = height;
   }
-  if (win.windowSizeFunc) {
-   getWasmTableEntry(win.windowSizeFunc)(win.id, width, height);
-  }
+ },
+ defaultWindowHints: () => {
+  GLFW.hints = Object.assign({}, GLFW.defaultHints);
  },
  createWindow: (width, height, title, monitor, share) => {
   var i, id;
@@ -7180,13 +7211,15 @@ var GLFW = {
    }
   }
   if (!Module.ctx && useWebGL) return 0;
-  var win = new GLFW_Window(id, width, height, title, monitor, share);
+  const canvas = Module["canvas"];
+  var win = new GLFW_Window(id, canvas.clientWidth, canvas.clientHeight, canvas.width, canvas.height, title, monitor, share);
   if (id - 1 == GLFW.windows.length) {
    GLFW.windows.push(win);
   } else {
    GLFW.windows[id - 1] = win;
   }
   GLFW.active = win;
+  GLFW.adjustCanvasDimensions();
   return win.id;
  },
  destroyWindow: winid => {
@@ -7201,6 +7234,133 @@ var GLFW = {
   Module.ctx = Browser.destroyContext(Module["canvas"], true, true);
  },
  swapBuffers: winid => {},
+ requestFullscreen(lockPointer, resizeCanvas) {
+  Browser.lockPointer = lockPointer;
+  Browser.resizeCanvas = resizeCanvas;
+  if (typeof Browser.lockPointer == "undefined") Browser.lockPointer = true;
+  if (typeof Browser.resizeCanvas == "undefined") Browser.resizeCanvas = false;
+  var canvas = Module["canvas"];
+  function fullscreenChange() {
+   Browser.isFullscreen = false;
+   var canvasContainer = canvas.parentNode;
+   if ((document["fullscreenElement"] || document["mozFullScreenElement"] || document["msFullscreenElement"] || document["webkitFullscreenElement"] || document["webkitCurrentFullScreenElement"]) === canvasContainer) {
+    canvas.exitFullscreen = Browser.exitFullscreen;
+    if (Browser.lockPointer) canvas.requestPointerLock();
+    Browser.isFullscreen = true;
+    if (Browser.resizeCanvas) {
+     Browser.setFullscreenCanvasSize();
+    } else {
+     Browser.updateCanvasDimensions(canvas);
+     Browser.updateResizeListeners();
+    }
+   } else {
+    canvasContainer.parentNode.insertBefore(canvas, canvasContainer);
+    canvasContainer.parentNode.removeChild(canvasContainer);
+    if (Browser.resizeCanvas) {
+     Browser.setWindowedCanvasSize();
+    } else {
+     Browser.updateCanvasDimensions(canvas);
+     Browser.updateResizeListeners();
+    }
+   }
+   if (Module["onFullScreen"]) Module["onFullScreen"](Browser.isFullscreen);
+   if (Module["onFullscreen"]) Module["onFullscreen"](Browser.isFullscreen);
+  }
+  if (!Browser.fullscreenHandlersInstalled) {
+   Browser.fullscreenHandlersInstalled = true;
+   document.addEventListener("fullscreenchange", fullscreenChange, false);
+   document.addEventListener("mozfullscreenchange", fullscreenChange, false);
+   document.addEventListener("webkitfullscreenchange", fullscreenChange, false);
+   document.addEventListener("MSFullscreenChange", fullscreenChange, false);
+  }
+  var canvasContainer = document.createElement("div");
+  canvas.parentNode.insertBefore(canvasContainer, canvas);
+  canvasContainer.appendChild(canvas);
+  canvasContainer.requestFullscreen = canvasContainer["requestFullscreen"] || canvasContainer["mozRequestFullScreen"] || canvasContainer["msRequestFullscreen"] || (canvasContainer["webkitRequestFullscreen"] ? () => canvasContainer["webkitRequestFullscreen"](Element["ALLOW_KEYBOARD_INPUT"]) : null) || (canvasContainer["webkitRequestFullScreen"] ? () => canvasContainer["webkitRequestFullScreen"](Element["ALLOW_KEYBOARD_INPUT"]) : null);
+  canvasContainer.requestFullscreen();
+ },
+ updateCanvasDimensions(canvas, wNative, hNative) {
+  const scale = GLFW.getHiDPIScale();
+  if (wNative && hNative) {
+   canvas.widthNative = wNative;
+   canvas.heightNative = hNative;
+  } else {
+   wNative = canvas.widthNative;
+   hNative = canvas.heightNative;
+  }
+  var w = wNative;
+  var h = hNative;
+  if (Module["forcedAspectRatio"] && Module["forcedAspectRatio"] > 0) {
+   if (w / h < Module["forcedAspectRatio"]) {
+    w = Math.round(h * Module["forcedAspectRatio"]);
+   } else {
+    h = Math.round(w / Module["forcedAspectRatio"]);
+   }
+  }
+  if (((document["fullscreenElement"] || document["mozFullScreenElement"] || document["msFullscreenElement"] || document["webkitFullscreenElement"] || document["webkitCurrentFullScreenElement"]) === canvas.parentNode) && (typeof screen != "undefined")) {
+   var factor = Math.min(screen.width / w, screen.height / h);
+   w = Math.round(w * factor);
+   h = Math.round(h * factor);
+  }
+  if (Browser.resizeCanvas) {
+   wNative = w;
+   hNative = h;
+  }
+  const wNativeScaled = Math.floor(wNative * scale);
+  const hNativeScaled = Math.floor(hNative * scale);
+  if (canvas.width != wNativeScaled) canvas.width = wNativeScaled;
+  if (canvas.height != hNativeScaled) canvas.height = hNativeScaled;
+  if (typeof canvas.style != "undefined") {
+   if (wNativeScaled != wNative || hNativeScaled != hNative) {
+    canvas.style.setProperty("width", wNative + "px", "important");
+    canvas.style.setProperty("height", hNative + "px", "important");
+   } else {
+    canvas.style.removeProperty("width");
+    canvas.style.removeProperty("height");
+   }
+  }
+ },
+ calculateMouseCoords(pageX, pageY) {
+  var rect = Module["canvas"].getBoundingClientRect();
+  var cw = Module["canvas"].clientWidth;
+  var ch = Module["canvas"].clientHeight;
+  var scrollX = ((typeof window.scrollX != "undefined") ? window.scrollX : window.pageXOffset);
+  var scrollY = ((typeof window.scrollY != "undefined") ? window.scrollY : window.pageYOffset);
+  assert((typeof scrollX != "undefined") && (typeof scrollY != "undefined"), "Unable to retrieve scroll position, mouse positions likely broken.");
+  var adjustedX = pageX - (scrollX + rect.left);
+  var adjustedY = pageY - (scrollY + rect.top);
+  adjustedX = adjustedX * (cw / rect.width);
+  adjustedY = adjustedY * (ch / rect.height);
+  return {
+   x: adjustedX,
+   y: adjustedY
+  };
+ },
+ setWindowAttrib: (winid, attrib, value) => {
+  var win = GLFW.WindowFromId(winid);
+  if (!win) return;
+  const isHiDPIAware = GLFW.isHiDPIAware();
+  win.attributes[attrib] = value;
+  if (isHiDPIAware !== GLFW.isHiDPIAware()) GLFW.adjustCanvasDimensions();
+ },
+ getDevicePixelRatio() {
+  return (typeof devicePixelRatio == "number" && devicePixelRatio) || 1;
+ },
+ isHiDPIAware() {
+  if (GLFW.active) return GLFW.active.attributes[139276] > 0; else return false;
+ },
+ adjustCanvasDimensions() {
+  const canvas = Module["canvas"];
+  Browser.updateCanvasDimensions(canvas, canvas.clientWidth, canvas.clientHeight);
+  Browser.updateResizeListeners();
+ },
+ getHiDPIScale() {
+  return GLFW.isHiDPIAware() ? GLFW.scale : 1;
+ },
+ onDevicePixelRatioChange() {
+  GLFW.onWindowContentScaleChanged(GLFW.getDevicePixelRatio());
+  GLFW.adjustCanvasDimensions();
+ },
  GLFW2ParamToGLFW3Param: param => {
   var table = {
    196609: 0,
@@ -7250,27 +7410,21 @@ var _glfwGetWindowUserPointer = winid => {
  return win.userptr;
 };
 
-var _emscripten_get_device_pixel_ratio = () => (typeof devicePixelRatio == "number" && devicePixelRatio) || 1;
-
 var _glfwInit = () => {
  if (GLFW.windows) return 1;
  GLFW.initialTime = GLFW.getTime();
- GLFW.hints = GLFW.defaultHints;
+ GLFW.defaultWindowHints();
  GLFW.windows = new Array;
  GLFW.active = null;
- GLFW.scale = _emscripten_get_device_pixel_ratio();
+ GLFW.scale = GLFW.getDevicePixelRatio();
  window.addEventListener("gamepadconnected", GLFW.onGamepadConnected, true);
  window.addEventListener("gamepaddisconnected", GLFW.onGamepadDisconnected, true);
  window.addEventListener("keydown", GLFW.onKeydown, true);
  window.addEventListener("keypress", GLFW.onKeyPress, true);
  window.addEventListener("keyup", GLFW.onKeyup, true);
  window.addEventListener("blur", GLFW.onBlur, true);
- (function updatePixelRatio() {
-  window.matchMedia("(resolution: " + window.devicePixelRatio + "dppx)").addEventListener("change", updatePixelRatio, {
-   once: true
-  });
-  GLFW.onWindowContentScaleChanged(_emscripten_get_device_pixel_ratio());
- })();
+ GLFW.devicePixelRatioMQL = window.matchMedia("(resolution: " + GLFW.getDevicePixelRatio() + "dppx)");
+ GLFW.devicePixelRatioMQL.addEventListener("change", GLFW.onDevicePixelRatioChange);
  Module["canvas"].addEventListener("touchmove", GLFW.onMousemove, true);
  Module["canvas"].addEventListener("touchstart", GLFW.onMouseButtonDown, true);
  Module["canvas"].addEventListener("touchcancel", GLFW.onMouseButtonUp, true);
@@ -7284,8 +7438,16 @@ var _glfwInit = () => {
  Module["canvas"].addEventListener("mouseleave", GLFW.onMouseleave, true);
  Module["canvas"].addEventListener("drop", GLFW.onDrop, true);
  Module["canvas"].addEventListener("dragover", GLFW.onDragover, true);
+ Browser.requestFullscreen = GLFW.requestFullscreen;
+ Browser.calculateMouseCoords = GLFW.calculateMouseCoords;
+ Browser.updateCanvasDimensions = GLFW.updateCanvasDimensions;
  Browser.resizeListeners.push((width, height) => {
-  GLFW.onCanvasResize(width, height);
+  if (GLFW.isHiDPIAware()) {
+   var canvas = Module["canvas"];
+   GLFW.onCanvasResize(canvas.clientWidth, canvas.clientHeight, width, height);
+  } else {
+   GLFW.onCanvasResize(width, height, width, height);
+  }
  });
  return 1;
 };
@@ -7330,6 +7492,7 @@ var _glfwTerminate = () => {
  Module["canvas"].removeEventListener("mouseleave", GLFW.onMouseleave, true);
  Module["canvas"].removeEventListener("drop", GLFW.onDrop, true);
  Module["canvas"].removeEventListener("dragover", GLFW.onDragover, true);
+ if (GLFW.devicePixelRatioMQL) GLFW.devicePixelRatioMQL.removeEventListener("change", GLFW.onDevicePixelRatioChange);
  Module["canvas"].width = Module["canvas"].height = 1;
  GLFW.windows = null;
  GLFW.active = null;
@@ -7840,7 +8003,7 @@ Module["FS_createDataFile"] = FS.createDataFile;
 
 Module["FS_unlink"] = FS.unlink;
 
-var missingLibrarySymbols = [ "writeI53ToI64", "writeI53ToI64Clamped", "writeI53ToI64Signaling", "writeI53ToU64Clamped", "writeI53ToU64Signaling", "readI53FromI64", "readI53FromU64", "convertI32PairToI53", "convertU32PairToI53", "growMemory", "ydayFromDate", "inetPton4", "inetNtop4", "inetPton6", "inetNtop6", "readSockaddr", "writeSockaddr", "getHostByName", "getCallstack", "emscriptenLog", "convertPCtoSourceLocation", "readEmAsmArgs", "jstoi_s", "listenOnce", "autoResumeAudioContext", "dynCallLegacy", "getDynCaller", "dynCall", "asmjsMangle", "handleAllocatorInit", "HandleAllocator", "getNativeTypeSize", "STACK_SIZE", "STACK_ALIGN", "POINTER_SIZE", "ASSERTIONS", "getCFunc", "ccall", "cwrap", "uleb128Encode", "sigToWasmTypes", "generateFuncType", "convertJsFunctionToWasm", "getEmptyTableSlot", "updateTableMap", "getFunctionAddress", "addFunction", "removeFunction", "reallyNegative", "strLen", "reSign", "formatString", "intArrayToString", "AsciiToString", "UTF16ToString", "stringToUTF16", "lengthBytesUTF16", "UTF32ToString", "stringToUTF32", "lengthBytesUTF32", "registerKeyEventCallback", "maybeCStringToJsString", "findEventTarget", "findCanvasEventTarget", "getBoundingClientRect", "fillMouseEventData", "registerMouseEventCallback", "registerWheelEventCallback", "registerUiEventCallback", "registerFocusEventCallback", "fillDeviceOrientationEventData", "registerDeviceOrientationEventCallback", "fillDeviceMotionEventData", "registerDeviceMotionEventCallback", "screenOrientation", "fillOrientationChangeEventData", "registerOrientationChangeEventCallback", "fillFullscreenChangeEventData", "registerFullscreenChangeEventCallback", "JSEvents_requestFullscreen", "JSEvents_resizeCanvasForFullscreen", "registerRestoreOldStyle", "hideEverythingExceptGivenElement", "restoreHiddenElements", "setLetterbox", "softFullscreenResizeWebGLRenderTarget", "doRequestFullscreen", "fillPointerlockChangeEventData", "registerPointerlockChangeEventCallback", "registerPointerlockErrorEventCallback", "requestPointerLock", "fillVisibilityChangeEventData", "registerVisibilityChangeEventCallback", "registerTouchEventCallback", "fillGamepadEventData", "registerGamepadEventCallback", "registerBeforeUnloadEventCallback", "fillBatteryEventData", "battery", "registerBatteryEventCallback", "setCanvasElementSize", "getCanvasElementSize", "checkWasiClock", "wasiRightsToMuslOFlags", "wasiOFlagsToMuslOFlags", "createDyncallWrapper", "setImmediateWrapped", "clearImmediateWrapped", "polyfillSetImmediate", "getPromise", "makePromise", "idsToPromises", "makePromiseCallback", "findMatchingCatch", "getSocketFromFD", "getSocketAddress", "FS_mkdirTree", "_setNetworkCallback", "emscriptenWebGLGet", "emscriptenWebGLGetUniform", "emscriptenWebGLGetVertexAttrib", "__glGetActiveAttribOrUniform", "emscriptenWebGLGetBufferBinding", "emscriptenWebGLValidateMapBufferTarget", "writeGLArray", "registerWebGlEventCallback", "runAndAbortIfError", "SDL_unicode", "SDL_ttfContext", "SDL_audio", "emscriptenWebGLGetIndexed", "ALLOC_NORMAL", "ALLOC_STACK", "allocate", "writeStringToMemory", "writeAsciiToMemory" ];
+var missingLibrarySymbols = [ "writeI53ToI64", "writeI53ToI64Clamped", "writeI53ToI64Signaling", "writeI53ToU64Clamped", "writeI53ToU64Signaling", "readI53FromI64", "readI53FromU64", "convertI32PairToI53", "convertU32PairToI53", "growMemory", "ydayFromDate", "inetPton4", "inetNtop4", "inetPton6", "inetNtop6", "readSockaddr", "writeSockaddr", "getHostByName", "getCallstack", "emscriptenLog", "convertPCtoSourceLocation", "readEmAsmArgs", "jstoi_s", "listenOnce", "autoResumeAudioContext", "dynCallLegacy", "getDynCaller", "dynCall", "asmjsMangle", "handleAllocatorInit", "HandleAllocator", "getNativeTypeSize", "STACK_SIZE", "STACK_ALIGN", "POINTER_SIZE", "ASSERTIONS", "getCFunc", "ccall", "cwrap", "uleb128Encode", "sigToWasmTypes", "generateFuncType", "convertJsFunctionToWasm", "getEmptyTableSlot", "updateTableMap", "getFunctionAddress", "addFunction", "removeFunction", "reallyNegative", "strLen", "reSign", "formatString", "intArrayToString", "AsciiToString", "UTF16ToString", "stringToUTF16", "lengthBytesUTF16", "UTF32ToString", "stringToUTF32", "lengthBytesUTF32", "registerKeyEventCallback", "maybeCStringToJsString", "findEventTarget", "findCanvasEventTarget", "getBoundingClientRect", "fillMouseEventData", "registerMouseEventCallback", "registerWheelEventCallback", "registerUiEventCallback", "registerFocusEventCallback", "fillDeviceOrientationEventData", "registerDeviceOrientationEventCallback", "fillDeviceMotionEventData", "registerDeviceMotionEventCallback", "screenOrientation", "fillOrientationChangeEventData", "registerOrientationChangeEventCallback", "fillFullscreenChangeEventData", "registerFullscreenChangeEventCallback", "JSEvents_requestFullscreen", "JSEvents_resizeCanvasForFullscreen", "registerRestoreOldStyle", "hideEverythingExceptGivenElement", "restoreHiddenElements", "setLetterbox", "softFullscreenResizeWebGLRenderTarget", "doRequestFullscreen", "fillPointerlockChangeEventData", "registerPointerlockChangeEventCallback", "registerPointerlockErrorEventCallback", "requestPointerLock", "fillVisibilityChangeEventData", "registerVisibilityChangeEventCallback", "registerTouchEventCallback", "fillGamepadEventData", "registerGamepadEventCallback", "disableGamepadApiIfItThrows", "registerBeforeUnloadEventCallback", "fillBatteryEventData", "battery", "registerBatteryEventCallback", "setCanvasElementSize", "getCanvasElementSize", "checkWasiClock", "wasiRightsToMuslOFlags", "wasiOFlagsToMuslOFlags", "createDyncallWrapper", "setImmediateWrapped", "clearImmediateWrapped", "polyfillSetImmediate", "getPromise", "makePromise", "idsToPromises", "makePromiseCallback", "findMatchingCatch", "Browser_asyncPrepareDataCounter", "getSocketFromFD", "getSocketAddress", "FS_mkdirTree", "_setNetworkCallback", "emscriptenWebGLGet", "emscriptenWebGLGetUniform", "emscriptenWebGLGetVertexAttrib", "__glGetActiveAttribOrUniform", "emscriptenWebGLGetBufferBinding", "emscriptenWebGLValidateMapBufferTarget", "writeGLArray", "registerWebGlEventCallback", "runAndAbortIfError", "SDL_unicode", "SDL_ttfContext", "SDL_audio", "emscriptenWebGLGetIndexed", "ALLOC_NORMAL", "ALLOC_STACK", "allocate", "writeStringToMemory", "writeAsciiToMemory" ];
 
 missingLibrarySymbols.forEach(missingLibrarySymbol);
 
